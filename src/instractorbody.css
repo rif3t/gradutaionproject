@@ -1,0 +1,236 @@
+.instracontent {
+    margin-top: 80px;
+    margin-left: 180px; 
+    padding: 0 20px 20px 20px;
+    transition: all 0.3s ease;
+}
+
+.searchbar {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.searchbtn {
+    border: none;
+    width: 200px;
+    height: 40px;
+    margin-left: 10px;
+}
+
+.instracinfo {
+    width: 1200px;
+    margin-top: 20px;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* ===== تنسيق رأس الجدول (Doctor's Profile) ===== */
+.nesa {
+    position: relative;
+}
+
+.nesaph {
+    border-radius: 15px 15px 0 0;
+    text-align: center;
+    background-color: rgba(232, 237, 246);
+    height: 70px;
+    font-weight: bold;
+    font-size: 40px;
+    line-height: 70px;
+    margin: 0;
+}
+
+/* ===== الجدول الجديد ===== */
+.custom-table-new {
+    width: 100%;
+}
+
+.table-row-new {
+    background: white;
+    border-bottom: 1px solid #E2E6EE;
+    padding: 16px 20px;
+    transition: background 0.15s;
+}
+
+.table-row-new:hover {
+    background-color: #F8F9FA;
+}
+
+/* كل العناصر في صف واحد */
+.row-all-items {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+/* تنسيق الاسم */
+.instructor-name-new {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2C3E50;
+    min-width: 160px;
+}
+
+/* تنسيق القسم */
+.instructor-dept-new {
+    font-size: 13px;
+    color: #8E99A4;
+    font-weight: 400;
+    min-width: 180px;
+}
+
+/* تنسيق الإيميل */
+.instructor-email {
+    font-size: 13px;
+    color: #7B8794;
+    min-width: 220px;
+}
+
+/* تنسيق الحالة */
+.status {
+    background-color: rgba(232, 245, 238);
+    color: rgba(61, 144, 131);
+    border-radius: 20px;
+    text-align: center;
+    padding: 4px 12px;
+    min-width: 80px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* تنسيق الأزرار */
+.action-buttons-new {
+    display: flex;
+    gap: 12px;
+    margin-left: auto;
+}
+
+.eyebtn {
+    border: none;
+    background-color: white;
+    color: rgb(148, 148, 255);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.15s;
+}
+
+.eyebtn:hover {
+    background-color: #EAF0FA;
+    color: #3B6CB4;
+}
+
+.editbtn {
+    border: none;
+    background-color: white;
+    color: #6d7073;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.15s;
+}
+
+.editbtn:hover {
+    background-color: #E8F5EE;
+    color: #3D8B6E;
+}
+
+.delbtn {
+    border: none;
+    background-color: white;
+    color: rgb(255, 20, 20);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.15s;
+}
+
+.delbtn:hover {
+    background-color: #FDECEC;
+    color: #D9534F;
+}
+
+/* بدون نتائج */
+.no-results {
+    text-align: center;
+    padding: 40px;
+    color: #A0AAB4;
+    font-size: 14px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1026px) {
+    .instracinfo {
+        width: 800px;
+    }
+}
+
+@media (min-width: 1200px) and (max-width: 1399px) {
+    .instracontent {
+        margin-top: 80px;
+        margin-left: 180px; 
+        padding: 0 20px 20px 20px;
+        transition: all 0.3s ease;
+    }
+    .instracinfo {
+        width: 800px;
+    }
+}
+
+@media (max-width: 768px) {
+    .instracontent {
+        margin-top: 80px;
+        margin-left: 160px !important; 
+        transition: all 0.3s ease;
+    }
+    .instracinfo {
+        width: 500px;
+    }
+    .searchbtn {
+        border: none;
+        width: 200px;
+        height: 55px;
+        margin-left: 10px;
+    }
+    .row-all-items {
+        gap: 15px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .action-buttons-new {
+        margin-left: 0;
+        margin-top: 8px;
+    }
+    .instructor-name-new { min-width: auto; }
+    .instructor-dept-new { min-width: auto; }
+    .instructor-email { min-width: auto; }
+}
+
+@media (max-width: 576px) {
+    .instracontent {
+        margin-top: 80px;
+        margin-left: 100px !important; 
+        transition: all 0.3s ease;
+    }
+    .instracinfo {
+        width: 280px;
+    }
+    .searchbtn {
+        border: none;
+        width: 150px;
+        height: 55px;
+        margin-left: 10px;
+    }
+    .nesaph {
+        font-size: 28px;
+        height: 50px;
+        line-height: 50px;
+    }
+    .row-all-items {
+        gap: 10px;
+    }
+}

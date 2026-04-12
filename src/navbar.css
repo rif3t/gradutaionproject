@@ -1,0 +1,39 @@
+.navbarr {
+    position: fixed;
+    top: 0;
+    left: 150px;
+    width: 100%;
+    z-index: 9999;
+}
+.dashlogo{
+     font-size: 30px;
+  font-weight: bold;
+  margin-left: -30px;
+  height: 20px;
+}
+@media (max-width: 800px) {
+ .dashlogo{
+     font-size: 30px;
+  font-weight: bold;
+  margin-left: 0px;
+  height: 20px;
+}
+.navbarr {
+    position: fixed;
+    top: 0;
+    left: 120px;
+    width: 100%;
+    z-index: 9999;
+}
+.brand{
+  margin-left: -25px;
+}
+}
+@media (min-width: 1050px) {
+ .dashlogo{
+     font-size: 30px;
+  font-weight: bold;
+  margin-left: -90px;
+  height: 20px;
+}
+}
