@@ -1,0 +1,16 @@
+.settingcontent {
+  margin-top: 90px;
+  margin-left: calc(var(--sidebar-width) + 12px);
+  padding: 0 20px 20px 20px;
+  transition: all 0.3s ease;
+}
+.settingcards{
+    margin-top: 15px;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.settingbtn{
+    /* background-color: rgb(32, 158, 32); */
+    font-weight: bold;
+}

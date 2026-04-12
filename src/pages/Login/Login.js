@@ -2,22 +2,25 @@ import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";  // ✅ شيل data و Navigate
 import { loginUser } from "../../services/auth";
 import logoImage from "../../assets/images/logo.png";
 import "./Login.css";
 
 function LoginPage() {
-  const navigate = useNavigate();
+  const navigate = useNavigate();  // ✅ c صغير
 
   const mutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
       localStorage.setItem("token", data.token);
+      localStorage.setItem("adminName", data.user?.fullName || "Admin");
+      localStorage.setItem("adminEmail", data.user?.email || "");
+      localStorage.setItem("adminRole", data.user?.role || "");
       navigate("/dashboard");
     },
     onError: (error) => {
-      console.log("Login error:", error.message);
+      console.log("login error", error.message);
     },
   });
 

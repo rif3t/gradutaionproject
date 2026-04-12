@@ -4,6 +4,7 @@ import LoginPage from "./pages/Login/Login";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import InstructorsPage from "./pages/Instructors/Instructors";
 import MainLayout from "./layouts/MainLayout/MainLayout";
+import Setting from "./pages/setting/Setting";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       <Route element={<MainLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/Instracpage" element={<InstructorsPage />} />
+        <Route path="/Setting" element={<Setting/>}/>
       </Route>
     </Routes>
   );

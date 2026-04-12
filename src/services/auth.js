@@ -5,5 +5,6 @@ export const loginUser = async ({ email, password }) => {
     "http://fcai-attendance-api.runasp.net/api/Authentication/Login",
     { email, password },
   );
+  console.log("API Response:", response.data);
   return response.data;
 };

@@ -28,7 +28,7 @@ function Sidebar() {
     { label: "Courses", icon: faBookOpen, to: "#" },
     { label: "Enrollment", icon: faClipboardCheck, to: "#" },
     { label: "Reports", icon: faChartLine, to: "#" },
-    { label: "Settings", icon: faGear, to: "#" },
+    { label: "Settings", icon: faGear, to: "/Setting" },
   ];
 
   return (
