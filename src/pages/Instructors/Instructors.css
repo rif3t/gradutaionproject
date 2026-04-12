@@ -1,0 +1,237 @@
+.instracontent {
+  margin-top: 90px;
+  margin-left: calc(var(--sidebar-width) + 12px);
+  padding: 0 20px 20px 20px;
+  transition: all 0.3s ease;
+}
+
+.searchbar {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.searchbtn {
+  border: none;
+  width: 200px;
+  height: 40px;
+  margin-left: 10px;
+}
+
+.instracinfo {
+  width: 1200px;
+  margin-top: 20px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nesa {
+  position: relative;
+}
+
+.nesaph {
+  border-radius: 15px 15px 0 0;
+  text-align: center;
+  background-color: rgba(232, 237, 246);
+  height: 70px;
+  font-weight: bold;
+  font-size: 40px;
+  line-height: 70px;
+  margin: 0;
+}
+
+.custom-table-new {
+  width: 100%;
+}
+
+.table-row-new {
+  background: white;
+  border-bottom: 1px solid #e2e6ee;
+  padding: 16px 20px;
+  transition: background 0.15s;
+}
+
+.table-row-new:hover {
+  background-color: #f8f9fa;
+}
+
+.row-all-items {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.instructor-name-new {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+  min-width: 160px;
+}
+
+.instructor-dept-new {
+  font-size: 13px;
+  color: #8e99a4;
+  font-weight: 400;
+  min-width: 180px;
+}
+
+.instructor-email {
+  font-size: 13px;
+  color: #7b8794;
+  min-width: 220px;
+}
+
+.status {
+  background-color: rgba(232, 245, 238);
+  color: rgba(61, 144, 131);
+  border-radius: 20px;
+  text-align: center;
+  padding: 4px 12px;
+  min-width: 80px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.action-buttons-new {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.eyebtn {
+  border: none;
+  background-color: white;
+  color: rgb(148, 148, 255);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.eyebtn:hover {
+  background-color: #eaf0fa;
+  color: #3b6cb4;
+}
+
+.editbtn {
+  border: none;
+  background-color: white;
+  color: #6d7073;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.editbtn:hover {
+  background-color: #e8f5ee;
+  color: #3d8b6e;
+}
+
+.delbtn {
+  border: none;
+  background-color: white;
+  color: rgb(255, 20, 20);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.delbtn:hover {
+  background-color: #fdecec;
+  color: #d9534f;
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px;
+  color: #a0aab4;
+  font-size: 14px;
+}
+
+@media (max-width: 1026px) {
+  .instracinfo {
+    width: 800px;
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1399px) {
+  .instracontent {
+    margin-top: 90px;
+    margin-left: calc(var(--sidebar-width) + 12px);
+    padding: 0 20px 20px 20px;
+  }
+
+  .instracinfo {
+    width: 800px;
+  }
+}
+
+@media (max-width: 768px) {
+  .instracontent {
+    margin-top: 76px;
+    margin-left: calc(var(--sidebar-width) + 6px) !important;
+  }
+
+  .instracinfo {
+    width: 500px;
+  }
+
+  .searchbtn {
+    width: 200px;
+    height: 55px;
+    margin-left: 10px;
+  }
+
+  .row-all-items {
+    gap: 15px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .action-buttons-new {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+
+  .instructor-name-new {
+    min-width: auto;
+  }
+  .instructor-dept-new {
+    min-width: auto;
+  }
+  .instructor-email {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 576px) {
+  .instracontent {
+    margin-top: 76px;
+    margin-left: calc(var(--sidebar-width) + 4px) !important;
+  }
+
+  .instracinfo {
+    width: 280px;
+  }
+
+  .searchbtn {
+    width: 150px;
+    height: 55px;
+    margin-left: 10px;
+  }
+
+  .nesaph {
+    font-size: 28px;
+    height: 50px;
+    line-height: 50px;
+  }
+
+  .row-all-items {
+    gap: 10px;
+  }
+}

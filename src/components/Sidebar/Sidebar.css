@@ -1,0 +1,273 @@
+:root {
+  --sidebar-width: 208px;
+  --sidebar-bg: #f4f6fb;
+  --sidebar-border: #dfe3ec;
+  --sidebar-text: #647185;
+  --sidebar-active-bg: #e9f1ff;
+  --sidebar-active-text: #2758a5;
+  --sidebar-active-border: #3b6cb4;
+}
+
+.sidebar-shell {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1100;
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  display: flex;
+  flex-direction: column;
+  animation: sidebar-slide-in 0.5s ease-out;
+}
+
+.sidebar-brand {
+  height: 88px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--sidebar-border);
+}
+
+.sidebar-brand h1 {
+  margin: 0;
+  color: #3b6cb4;
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.5px;
+  animation: fade-in-up 0.45s ease-out;
+}
+
+.sidebar-university-logo {
+  height: 46px;
+  width: auto;
+  object-fit: contain;
+  animation: fade-in-up 0.5s ease-out;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-item {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  text-decoration: none;
+  background: transparent;
+  color: var(--sidebar-text);
+  font-size: 18px;
+  font-weight: 600;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease,
+    box-shadow 0.2s ease;
+  animation: item-fade-in 0.4s ease-out both;
+}
+
+.sidebar-item:hover {
+  background: #e9edf5;
+  color: #334155;
+  transform: translateX(4px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
+}
+
+.sidebar-item:active {
+  transform: translateX(1px) scale(0.99);
+}
+
+.sidebar-item-active {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-text);
+  border-left: 3px solid var(--sidebar-active-border);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-left: 11px;
+  box-shadow: inset 0 0 0 1px rgba(59, 108, 180, 0.14);
+}
+
+.sidebar-item-muted {
+  cursor: default;
+}
+
+.sidebar-item-icon {
+  width: 18px;
+  color: #91a0b5;
+}
+
+.sidebar-item-active .sidebar-item-icon {
+  color: #3b6cb4;
+}
+
+.sidebar-footer {
+  border-top: 1px solid var(--sidebar-border);
+  padding: 14px 10px;
+}
+
+.sidebar-logout {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  height: 44px;
+  background: transparent;
+  color: #4f6488;
+  font-size: 17px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.sidebar-logout:hover {
+  background: #e9f1ff;
+  color: #2c4f88;
+  transform: translateX(3px);
+}
+
+.sidebar-logout:active {
+  transform: scale(0.98);
+}
+
+.sidebar-nav .sidebar-item:nth-child(1) {
+  animation-delay: 0.03s;
+}
+
+.sidebar-nav .sidebar-item:nth-child(2) {
+  animation-delay: 0.07s;
+}
+
+.sidebar-nav .sidebar-item:nth-child(3) {
+  animation-delay: 0.11s;
+}
+
+.sidebar-nav .sidebar-item:nth-child(4) {
+  animation-delay: 0.15s;
+}
+
+.sidebar-nav .sidebar-item:nth-child(5) {
+  animation-delay: 0.19s;
+}
+
+.sidebar-nav .sidebar-item:nth-child(6) {
+  animation-delay: 0.23s;
+}
+
+.sidebar-nav .sidebar-item:nth-child(7) {
+  animation-delay: 0.27s;
+}
+
+@keyframes sidebar-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes item-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-shell,
+  .sidebar-brand h1,
+  .sidebar-item,
+  .sidebar-logout {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+@media (max-width: 992px) {
+  :root {
+    --sidebar-width: 178px;
+  }
+
+  .sidebar-item {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 90px;
+  }
+
+  .sidebar-brand {
+    padding: 0;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .sidebar-brand h1 {
+    font-size: 26px;
+  }
+
+  .sidebar-university-logo {
+    height: 28px;
+  }
+
+  .sidebar-nav {
+    padding: 12px 6px;
+    gap: 8px;
+  }
+
+  .sidebar-item {
+    justify-content: center;
+    padding: 0;
+    gap: 0;
+  }
+
+  .sidebar-item span,
+  .sidebar-logout span {
+    display: none;
+  }
+
+  .sidebar-item-active {
+    border-left-width: 2px;
+    padding-left: 0;
+  }
+
+  .sidebar-logout {
+    justify-content: center;
+    padding: 0;
+    gap: 0;
+  }
+}
