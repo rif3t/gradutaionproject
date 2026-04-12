@@ -15,6 +15,7 @@
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
+  text-align: center;
 }
 
 .dashcard:hover {
@@ -30,70 +31,159 @@
 
 .dashdigram {
   margin-top: 50px;
+  
 }
 
 .digram {
-  margin: 0 auto;
+  /* margin: 0 auto; */
+   border-radius: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .quickuse {
   border-radius: 20px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  margin-top: 10px;
 }
-
-@media (max-width: 992px) {
-  .dashcontent {
-    margin-left: calc(var(--sidebar-width) + 8px);
+.quickbtn{
+  width: 80%;
+  margin-top: 10px;
+  border-radius: 20px;
+  border: 0;
+  color: black;
+  text-align:start;
+}
+.actiontitle{
+  text-align: center;
+}
+@media (max-width: 768px) and (min-width: 500px) {
+  .dashcard3{
+    /* margin-left: 50px; */
+    /* padding-left: 50px; */
+    /* margin: 2px auto; */
   }
 }
+/* Website Guide Card Styles */
+.guide-card {
+  border-radius: 24px;
+  border: none;
+  /* box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); */
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  margin-top: 20px;
+  margin-bottom: 20px;
+   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  transition: transform 0.2s, box-shadow 0.2s !important;
+}
 
+.guide-main-title {
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 10px;
+  color: #1a1a2e;
+}
+
+.guide-main-subtitle {
+  text-align: center;
+  color: #6c757d;
+  margin-bottom: 30px;
+  font-size: 14px;
+}
+
+.guide-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.guide-feature-item:hover {
+  background: #f8f9fa;
+  transform: translateX(5px);
+}
+
+.guide-feature-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.guide-feature-content {
+  flex: 1;
+}
+
+.guide-feature-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #2c3e50;
+}
+
+.guide-feature-desc {
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 0;
+  line-height: 1.4;
+}
+
+.guide-divider {
+  margin: 20px 0 15px 0;
+  border: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #dee2e6, transparent);
+}
+
+.guide-footer {
+  text-align: center;
+  padding: 5px;
+}
+
+.guide-footer-text {
+  font-size: 13px;
+  color: #4a5568;
+  margin-bottom: 0;
+}
+
+.guide-footer-icon {
+  color: #28a745;
+  margin-right: 8px;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .dashcontent {
-    margin-left: calc(var(--sidebar-width) + 6px);
-    margin-top: 76px;
-    padding: 0 15px;
+  .guide-main-title {
+    font-size: 20px;
   }
-
-  .dashtext {
-    text-align: center;
-    font-size: 1.5rem;
-    padding-left: 0;
+  
+  .guide-feature-item {
+    padding: 10px;
+  }
+  
+  .guide-feature-title {
+    font-size: 14px;
+  }
+  
+  .guide-feature-desc {
+    font-size: 11px;
   }
 }
 
 @media (max-width: 576px) {
-  .dashcontent {
-    margin-top: 78px;
-    margin-left: calc(var(--sidebar-width) + 4px);
-    margin-right: 10px;
+  .guide-feature-item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
-
-  .dashtext {
-    font-size: 1.3rem;
-  }
-
-  .dashcol {
-    margin-top: 15px;
-  }
-
-  .quickuse {
-    margin-bottom: 15px;
-  }
-}
-
-@media (max-width: 426px) {
-  .dashcontent {
-    margin-top: 72px;
-    padding: 0 10px;
-  }
-
-  .dashtext {
-    font-size: 1.2rem;
-  }
-}
-
-@media (min-width: 1400px) {
-  .quickuse {
-    margin-left: 70px;
+  
+  .guide-feature-icon {
+    margin-bottom: 8px;
   }
 }
