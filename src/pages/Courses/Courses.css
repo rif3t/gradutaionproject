@@ -17,8 +17,17 @@
 .courses-toolbar {
   margin-top: 16px;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr 180px 200px auto;
   gap: 12px;
+}
+
+.courses-filter-select {
+  height: 58px;
+  border-radius: 12px;
+  border: 1px solid #d5deec;
+  color: #40516f;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .courses-search-shell {
