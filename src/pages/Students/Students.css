@@ -1,0 +1,335 @@
+.students-page-wrap {
+  margin-top: 90px;
+  margin-left: calc(var(--sidebar-width) + 8px);
+  padding: 18px 20px 24px;
+  min-height: calc(100vh - 90px);
+  /* background: #d3d8e3; */
+  width: 100%;
+}
+
+.students-header h2 {
+  margin: 0;
+  color: #1f2f47;
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+}
+
+.students-header p {
+  margin: 8px 0 0;
+  color: #6d7b90;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.years-grid {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.year-card {
+  border: 1px solid #d6dde9;
+  border-radius: 16px;
+  min-height: 170px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.22s ease;
+}
+
+.year-card:hover {
+  transform: translateY(-2px);
+  border-color: #63a7d4;
+  box-shadow: 0 12px 22px rgba(30, 66, 124, 0.1);
+}
+
+.year-icon {
+  font-size: 35px;
+  color: #394c74;
+}
+
+.year-card h3 {
+  margin: 0;
+  color: #2c3a57;
+  font-size: 31px;
+  font-weight: 800;
+}
+
+.year-card p {
+  margin: 0;
+  color: #8d98ab;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.students-header-list {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.back-btn {
+  margin-bottom: 9px;
+  border: none;
+  background: transparent;
+  color: #3f5f96;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.students-toolbar {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+}
+
+.search-shell {
+  background: #ffffff;
+  border: 1px solid #d5deec;
+  border-radius: 14px;
+  height: 58px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #8da0bf;
+}
+
+.search-shell input {
+  border: 0;
+  outline: none;
+  width: 100%;
+  color: #40516f;
+  font-size: 17px;
+  background: transparent;
+}
+
+.search-shell input::placeholder {
+  color: #96a4ba;
+}
+
+.btn-secondary,
+.btn-primary {
+  border-radius: 13px;
+  height: 58px;
+  padding: 0 20px;
+  font-size: 22px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-secondary {
+  border: 1px solid #64a8c8;
+  background: #eef8fe;
+  color: #3d7f9f;
+}
+
+.btn-primary {
+  border: 1px solid #4f9f7d;
+  background: #54a785;
+  color: #ffffff;
+}
+
+.students-table-card {
+  margin-top: 14px;
+  background: #ffffff;
+  border: 1px solid #d8e0ec;
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.students-table-card h3 {
+  margin: 2px 6px 14px;
+  color: #2c3e59;
+  font-size: 33px;
+  font-weight: 800;
+}
+
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.students-table {
+  width: 100%;
+  min-width: 940px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.students-table thead th {
+  background: #eceff5;
+  color: #7a879a;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  text-align: left;
+  padding: 14px 12px;
+  border-top: 1px solid #dde4ef;
+  border-bottom: 1px solid #dde4ef;
+}
+
+.students-table thead th:first-child {
+  border-top-left-radius: 10px;
+}
+
+.students-table thead th:last-child {
+  border-top-right-radius: 10px;
+}
+
+.students-table tbody td {
+  background: #ffffff;
+  border-bottom: 1px solid #ebeff6;
+  color: #3d4e68;
+  font-size: 15px;
+  padding: 14px 12px;
+}
+
+.student-id {
+  color: #4f74a4 !important;
+  font-weight: 800;
+}
+
+.student-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  color: #2c3d59;
+}
+
+.avatar-pill {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #e9eef7;
+  color: #4b6d9b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.student-email {
+  color: #7f8ca1;
+}
+
+.status-pill {
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.status-active {
+  background: #dff4e9;
+  color: #288758;
+}
+
+.status-inactive {
+  background: #fff1dd;
+  color: #c7821b;
+}
+
+.action-icons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.action-icons button {
+  border: 0;
+  background: transparent;
+  color: #9ca8ba;
+  font-size: 14px;
+}
+
+.action-icons button:hover {
+  color: #3f5f96;
+}
+
+.empty-state {
+  text-align: center;
+  color: #8391a6;
+  font-weight: 600;
+}
+
+@media (max-width: 1200px) {
+  .students-header h2 {
+    font-size: 34px;
+  }
+
+  .students-header p {
+    font-size: 16px;
+  }
+
+  .year-card h3 {
+    font-size: 24px;
+  }
+
+  .year-card p {
+    font-size: 15px;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    font-size: 16px;
+    height: 52px;
+  }
+
+  .students-table-card h3 {
+    font-size: 27px;
+  }
+}
+
+@media (max-width: 992px) {
+  .students-page-wrap {
+    margin-left: calc(var(--sidebar-width) + 6px);
+    padding: 14px;
+  }
+
+  .years-grid {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+
+  .students-toolbar {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .students-page-wrap {
+    margin-top: 76px;
+    margin-left: calc(var(--sidebar-width) + 4px);
+    padding: 12px 10px 14px;
+  }
+
+  .students-header h2 {
+    font-size: 26px;
+  }
+
+  .students-header p {
+    font-size: 14px;
+  }
+
+  .years-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .year-card {
+    min-height: 145px;
+  }
+}

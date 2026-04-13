@@ -10,7 +10,7 @@
 
 # production
 /build
-
+swager.json
 # misc
 .DS_Store
 .env.local

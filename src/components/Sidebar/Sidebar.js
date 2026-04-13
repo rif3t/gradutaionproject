@@ -24,10 +24,10 @@ function Sidebar() {
   const navItems = [
     { label: "Dashboard", icon: faGauge, to: "/dashboard" },
     { label: "Instructors", icon: faUserTie, to: "/Instracpage" },
-    { label: "Students", icon: faGraduationCap, to: "#" },
-    { label: "Courses", icon: faBookOpen, to: "#" },
-    { label: "Enrollment", icon: faClipboardCheck, to: "#" },
-    { label: "Reports", icon: faChartLine, to: "#" },
+    { label: "Students", icon: faGraduationCap, to: "/students" },
+    { label: "Courses", icon: faBookOpen, to: "/courses" },
+    { label: "Enrollment", icon: faClipboardCheck, to: "/enrollment" },
+    { label: "Reports", icon: faChartLine, to: "/reports" },
     { label: "Settings", icon: faGear, to: "/Setting" },
   ];
 
