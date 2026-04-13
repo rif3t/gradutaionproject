@@ -17,7 +17,17 @@ function LoginPage() {
       localStorage.setItem("adminName", data.user?.fullName || "Admin");
       localStorage.setItem("adminEmail", data.user?.email || "");
       localStorage.setItem("adminRole", data.user?.role || "");
-      navigate("/dashboard");
+
+      const userRole = data.user?.role?.toLowerCase();
+ if (userRole === "admin") {
+        navigate("/dashboard");
+      } 
+      else if (userRole === "instructor") {
+        navigate("/instructor-dashboard");
+      }
+      else {
+        navigate("/unauthorized");
+      }
     },
     onError: (error) => {
       console.log("login error", error.message);
