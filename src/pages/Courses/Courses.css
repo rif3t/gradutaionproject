@@ -172,6 +172,109 @@
   font-weight: 600;
 }
 
+.course-details-modal {
+  max-width: 780px;
+}
+
+.course-details-shell {
+  border-radius: 18px;
+  background: radial-gradient(
+      circle at 6% 0%,
+      rgba(88, 164, 136, 0.22),
+      transparent 36%
+    ),
+    radial-gradient(circle at 90% 14%, rgba(80, 120, 198, 0.2), transparent 36%),
+    #f4f8fe;
+  border: 1px solid #dce5f2;
+  padding: 16px;
+}
+
+.course-details-hero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #ffffff, #edf4ff);
+  border: 1px solid #d9e4f4;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.course-details-badge {
+  min-width: 74px;
+  height: 74px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #4568a1, #3a9e83);
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.04em;
+}
+
+.course-details-title-block h4 {
+  margin: 0;
+  color: #213653;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.course-details-subtitle {
+  display: block;
+  margin-top: 3px;
+  color: #71819b;
+  font-size: 0.9rem;
+}
+
+.course-details-grid {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.course-detail-card {
+  border: 1px solid #dce6f4;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 11px;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.course-detail-card-wide {
+  grid-column: span 2;
+}
+
+.course-detail-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: #ecf2fb;
+  color: #4a6b9e;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.course-detail-card p {
+  margin: 0;
+  color: #7d8ca2;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.course-detail-card h6 {
+  margin: 2px 0 0;
+  color: #273c59;
+  font-size: 0.98rem;
+  font-weight: 700;
+  word-break: break-word;
+}
+
 @media (max-width: 1200px) {
   .courses-header h2 {
     font-size: 34px;
@@ -207,5 +310,17 @@
 
   .courses-header h2 {
     font-size: 26px;
+  }
+
+  .course-details-modal {
+    max-width: calc(100vw - 24px);
+  }
+
+  .course-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .course-detail-card-wide {
+    grid-column: auto;
   }
 }

@@ -9,6 +9,11 @@ import {
   faEdit,
   faTrash,
   faEye,
+  faEnvelope,
+  faPhone,
+  faIdCard,
+  faCircleCheck,
+  faCircleXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -243,16 +248,30 @@ function InstructorsPage() {
     e.preventDefault();
   };
 
+  const instructorInitials = selectedInstructorDetails?.fullName
+    ? selectedInstructorDetails.fullName
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase())
+        .join("")
+    : "IN";
+
   return (
     <div className="instracontent">
       <h3 className="dashtext">Instructor Management</h3>
 
-      <Modal show={showCreateModal} onHide={handleCloseCreateModal} centered>
+      <Modal
+        show={showCreateModal}
+        onHide={handleCloseCreateModal}
+        centered
+        dialogClassName="app-modal"
+      >
         <Modal.Header closeButton>
           <Modal.Title>Add New Instructor</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
+          <Form className="app-modal-form">
             <Form.Control
               name="fullName"
               placeholder="Full Name *"
@@ -326,7 +345,12 @@ function InstructorsPage() {
         </Modal.Footer>
       </Modal>
 
-      <Modal show={showViewModal} onHide={handleCloseViewModal} centered>
+      <Modal
+        show={showViewModal}
+        onHide={handleCloseViewModal}
+        centered
+        dialogClassName="app-modal instructor-details-modal"
+      >
         <Modal.Header closeButton>
           <Modal.Title>Instructor Details</Modal.Title>
         </Modal.Header>
@@ -334,24 +358,75 @@ function InstructorsPage() {
           {isDetailsLoading ? (
             <p>Loading details...</p>
           ) : selectedInstructorDetails ? (
-            <div>
-              <p>
-                <strong>Name:</strong> {selectedInstructorDetails.fullName}
-              </p>
-              <p>
-                <strong>Email:</strong> {selectedInstructorDetails.email}
-              </p>
-              <p>
-                <strong>Phone:</strong> {selectedInstructorDetails.phoneNumber}
-              </p>
-              <p>
-                <strong>National ID:</strong>{" "}
-                {selectedInstructorDetails.nationalId}
-              </p>
-              <p>
-                <strong>Status:</strong>{" "}
-                {selectedInstructorDetails.isActive ? "Active" : "Inactive"}
-              </p>
+            <div className="instructor-details-shell">
+              <div className="instructor-details-hero">
+                {selectedInstructorDetails.profilePictureUrl ? (
+                  <img
+                    src={selectedInstructorDetails.profilePictureUrl}
+                    alt={selectedInstructorDetails.fullName || "Instructor"}
+                    className="instructor-details-avatar"
+                  />
+                ) : (
+                  <div className="instructor-details-avatar-fallback">
+                    {instructorInitials}
+                  </div>
+                )}
+
+                <div className="instructor-details-title-block">
+                  <h4>{selectedInstructorDetails.fullName || "No Name"}</h4>
+                  <span className="instructor-details-subtitle">
+                    Instructor Profile Overview
+                  </span>
+                  <span
+                    className={`instructor-status-chip ${
+                      selectedInstructorDetails.isActive
+                        ? "instructor-status-active"
+                        : "instructor-status-inactive"
+                    }`}
+                  >
+                    <FontAwesomeIcon
+                      icon={
+                        selectedInstructorDetails.isActive
+                          ? faCircleCheck
+                          : faCircleXmark
+                      }
+                    />
+                    {selectedInstructorDetails.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="instructor-details-grid">
+                <article className="instructor-detail-card">
+                  <span className="instructor-detail-icon">
+                    <FontAwesomeIcon icon={faEnvelope} />
+                  </span>
+                  <div>
+                    <p>Email Address</p>
+                    <h6>{selectedInstructorDetails.email || "-"}</h6>
+                  </div>
+                </article>
+
+                <article className="instructor-detail-card">
+                  <span className="instructor-detail-icon">
+                    <FontAwesomeIcon icon={faPhone} />
+                  </span>
+                  <div>
+                    <p>Phone Number</p>
+                    <h6>{selectedInstructorDetails.phoneNumber || "-"}</h6>
+                  </div>
+                </article>
+
+                <article className="instructor-detail-card instructor-detail-card-wide">
+                  <span className="instructor-detail-icon">
+                    <FontAwesomeIcon icon={faIdCard} />
+                  </span>
+                  <div>
+                    <p>National ID</p>
+                    <h6>{selectedInstructorDetails.nationalId || "-"}</h6>
+                  </div>
+                </article>
+              </div>
             </div>
           ) : (
             <p>No details available.</p>
@@ -359,7 +434,12 @@ function InstructorsPage() {
         </Modal.Body>
       </Modal>
 
-      <Modal show={showEditModal} onHide={handleCloseEditModal} centered>
+      <Modal
+        show={showEditModal}
+        onHide={handleCloseEditModal}
+        centered
+        dialogClassName="app-modal"
+      >
         <Modal.Header closeButton>
           <Modal.Title>Edit Instructor</Modal.Title>
         </Modal.Header>
@@ -367,7 +447,7 @@ function InstructorsPage() {
           {isDetailsLoading ? (
             <p>Loading details...</p>
           ) : (
-            <Form>
+            <Form className="app-modal-form">
               <Form.Control
                 name="fullName"
                 placeholder="Full Name *"

@@ -7,6 +7,11 @@ import {
   faEye,
   faPenToSquare,
   faTrashCan,
+  faBookOpen,
+  faLayerGroup,
+  faCalendarDays,
+  faBuildingColumns,
+  faChalkboardUser,
 } from "@fortawesome/free-solid-svg-icons";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
@@ -205,18 +210,27 @@ function CoursesPage() {
     setShowEditModal(true);
   };
 
+  const courseBadgeText = selectedCourseDetails?.courseCode
+    ? selectedCourseDetails.courseCode.slice(0, 6).toUpperCase()
+    : "CRS";
+
   return (
     <div className="courses-page-wrap">
       <header className="courses-header">
         <h2>Course Management</h2>
       </header>
 
-      <Modal show={showCreateModal} onHide={handleCloseCreateModal} centered>
+      <Modal
+        show={showCreateModal}
+        onHide={handleCloseCreateModal}
+        centered
+        dialogClassName="app-modal"
+      >
         <Modal.Header closeButton>
           <Modal.Title>Add Course</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
+          <Form className="app-modal-form">
             <Form.Control
               className="mb-2"
               placeholder="Course Code"
@@ -291,7 +305,12 @@ function CoursesPage() {
         </Modal.Footer>
       </Modal>
 
-      <Modal show={showViewModal} onHide={handleCloseViewModal} centered>
+      <Modal
+        show={showViewModal}
+        onHide={handleCloseViewModal}
+        centered
+        dialogClassName="app-modal course-details-modal"
+      >
         <Modal.Header closeButton>
           <Modal.Title>Course Details</Modal.Title>
         </Modal.Header>
@@ -299,28 +318,70 @@ function CoursesPage() {
           {isDetailsLoading ? (
             <p>Loading details...</p>
           ) : selectedCourseDetails ? (
-            <div>
-              <p>
-                <strong>Code:</strong> {selectedCourseDetails.courseCode}
-              </p>
-              <p>
-                <strong>Name:</strong> {selectedCourseDetails.courseName}
-              </p>
-              <p>
-                <strong>Level:</strong> {selectedCourseDetails.level}
-              </p>
-              <p>
-                <strong>Semester:</strong>{" "}
-                {getSemesterLabel(selectedCourseDetails.semester)}
-              </p>
-              <p>
-                <strong>Department:</strong>{" "}
-                {selectedCourseDetails.departmentName || "-"}
-              </p>
-              <p>
-                <strong>Instructor:</strong>{" "}
-                {selectedCourseDetails.instructorName || "-"}
-              </p>
+            <div className="course-details-shell">
+              <div className="course-details-hero">
+                <div className="course-details-badge">{courseBadgeText}</div>
+                <div className="course-details-title-block">
+                  <h4>
+                    {selectedCourseDetails.courseName || "Untitled Course"}
+                  </h4>
+                  <span className="course-details-subtitle">
+                    Academic Course Information
+                  </span>
+                </div>
+              </div>
+
+              <div className="course-details-grid">
+                <article className="course-detail-card">
+                  <span className="course-detail-icon">
+                    <FontAwesomeIcon icon={faBookOpen} />
+                  </span>
+                  <div>
+                    <p>Course Code</p>
+                    <h6>{selectedCourseDetails.courseCode || "-"}</h6>
+                  </div>
+                </article>
+
+                <article className="course-detail-card">
+                  <span className="course-detail-icon">
+                    <FontAwesomeIcon icon={faLayerGroup} />
+                  </span>
+                  <div>
+                    <p>Level</p>
+                    <h6>Level {selectedCourseDetails.level || "-"}</h6>
+                  </div>
+                </article>
+
+                <article className="course-detail-card">
+                  <span className="course-detail-icon">
+                    <FontAwesomeIcon icon={faCalendarDays} />
+                  </span>
+                  <div>
+                    <p>Semester</p>
+                    <h6>{getSemesterLabel(selectedCourseDetails.semester)}</h6>
+                  </div>
+                </article>
+
+                <article className="course-detail-card">
+                  <span className="course-detail-icon">
+                    <FontAwesomeIcon icon={faBuildingColumns} />
+                  </span>
+                  <div>
+                    <p>Department</p>
+                    <h6>{selectedCourseDetails.departmentName || "-"}</h6>
+                  </div>
+                </article>
+
+                <article className="course-detail-card course-detail-card-wide">
+                  <span className="course-detail-icon">
+                    <FontAwesomeIcon icon={faChalkboardUser} />
+                  </span>
+                  <div>
+                    <p>Instructor</p>
+                    <h6>{selectedCourseDetails.instructorName || "-"}</h6>
+                  </div>
+                </article>
+              </div>
             </div>
           ) : (
             <p>No details available.</p>
@@ -328,7 +389,12 @@ function CoursesPage() {
         </Modal.Body>
       </Modal>
 
-      <Modal show={showEditModal} onHide={handleCloseEditModal} centered>
+      <Modal
+        show={showEditModal}
+        onHide={handleCloseEditModal}
+        centered
+        dialogClassName="app-modal"
+      >
         <Modal.Header closeButton>
           <Modal.Title>Edit Course</Modal.Title>
         </Modal.Header>
@@ -336,7 +402,7 @@ function CoursesPage() {
           {isDetailsLoading ? (
             <p>Loading details...</p>
           ) : (
-            <Form>
+            <Form className="app-modal-form">
               <Form.Control
                 className="mb-2"
                 placeholder="Course Code"

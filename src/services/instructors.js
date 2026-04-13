@@ -1,4 +1,18 @@
-import apiClient, { getApiErrorMessage } from "./apiClient";
+import apiClient, {
+  getApiErrorMessage,
+  toAbsoluteBackendImageUrl,
+} from "./apiClient";
+
+const normalizeInstructorImageUrl = (instructor) => {
+  if (!instructor) {
+    return instructor;
+  }
+
+  return {
+    ...instructor,
+    profilePictureUrl: toAbsoluteBackendImageUrl(instructor.profilePictureUrl),
+  };
+};
 
 const toFormData = (payload) => {
   const formData = new FormData();
@@ -35,7 +49,12 @@ export const getInstructors = async ({
       },
     });
 
-    return response.data;
+    return {
+      ...response.data,
+      data: Array.isArray(response.data?.data)
+        ? response.data.data.map(normalizeInstructorImageUrl)
+        : response.data?.data,
+    };
   } catch (error) {
     throw new Error(
       getApiErrorMessage(error, "Failed to fetch instructors list."),
@@ -46,7 +65,7 @@ export const getInstructors = async ({
 export const getInstructorById = async (id) => {
   try {
     const response = await apiClient.get(`/api/Instructors/${id}`);
-    return response.data;
+    return normalizeInstructorImageUrl(response.data);
   } catch (error) {
     throw new Error(
       getApiErrorMessage(error, "Failed to fetch instructor details."),
@@ -61,7 +80,7 @@ export const createInstructor = async (payload) => {
     // Sending FormData makes the browser use multipart/form-data with boundary.
     const response = await apiClient.post("/api/Instructors", formData);
 
-    return response.data;
+    return normalizeInstructorImageUrl(response.data);
   } catch (error) {
     throw new Error(getApiErrorMessage(error, "Failed to create instructor."));
   }
@@ -74,7 +93,7 @@ export const updateInstructor = async (id, payload) => {
     // Sending FormData makes the browser use multipart/form-data with boundary.
     const response = await apiClient.put(`/api/Instructors/${id}`, formData);
 
-    return response.data;
+    return normalizeInstructorImageUrl(response.data);
   } catch (error) {
     throw new Error(getApiErrorMessage(error, "Failed to update instructor."));
   }
