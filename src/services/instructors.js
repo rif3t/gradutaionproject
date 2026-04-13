@@ -56,15 +56,10 @@ export const getInstructorById = async (id) => {
 
 export const createInstructor = async (payload) => {
   try {
-    const response = await apiClient.post(
-      "/api/Instructors",
-      toFormData(payload),
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      },
-    );
+    const formData = toFormData(payload);
+
+    // Sending FormData makes the browser use multipart/form-data with boundary.
+    const response = await apiClient.post("/api/Instructors", formData);
 
     return response.data;
   } catch (error) {
@@ -74,15 +69,10 @@ export const createInstructor = async (payload) => {
 
 export const updateInstructor = async (id, payload) => {
   try {
-    const response = await apiClient.put(
-      `/api/Instructors/${id}`,
-      toFormData(payload),
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      },
-    );
+    const formData = toFormData(payload);
+
+    // Sending FormData makes the browser use multipart/form-data with boundary.
+    const response = await apiClient.put(`/api/Instructors/${id}`, formData);
 
     return response.data;
   } catch (error) {
