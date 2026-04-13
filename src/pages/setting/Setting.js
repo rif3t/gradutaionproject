@@ -8,7 +8,6 @@ function Setting() {
     const [adminName, setAdminName] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
   useEffect(() => {
-    // جلب البيانات من localStorage
     setAdminName(localStorage.getItem('adminName') || '');
     setAdminEmail(localStorage.getItem('adminEmail') || '');
   }, []);
