@@ -1,10 +1,13 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChartColumn,
   faCalendarDays,
   faGraduationCap,
 } from "@fortawesome/free-solid-svg-icons";
+import Alert from "react-bootstrap/Alert";
+import { getWeatherForecast } from "../../services/weather";
 import "./Reports.css";
 
 const reportCards = [
@@ -57,6 +60,15 @@ function progressClass(rate) {
 
 function ReportsPage() {
   const [activeCard, setActiveCard] = useState("summary");
+  const {
+    data: weatherRows = [],
+    isLoading: isWeatherLoading,
+    isError: isWeatherError,
+    error: weatherError,
+  } = useQuery({
+    queryKey: ["weather-forecast"],
+    queryFn: getWeatherForecast,
+  });
 
   const activeMeta = reportCards.find((card) => card.id === activeCard);
 
@@ -133,6 +145,44 @@ function ReportsPage() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className="reports-table-shell weather-shell">
+        <div className="reports-table-title">
+          <h3>Weather Forecast (API)</h3>
+          <p>Live data from /WeatherForecast endpoint</p>
+        </div>
+
+        {isWeatherLoading ? (
+          <p className="reports-weather-loading">Loading weather forecast...</p>
+        ) : isWeatherError ? (
+          <Alert variant="danger" className="mb-0 mt-3">
+            {weatherError.message}
+          </Alert>
+        ) : (
+          <div className="reports-table-scroll">
+            <table className="reports-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Temperature C</th>
+                  <th>Temperature F</th>
+                  <th>Summary</th>
+                </tr>
+              </thead>
+              <tbody>
+                {weatherRows.map((row, index) => (
+                  <tr key={`${row.date}-${index}`}>
+                    <td>{row.date}</td>
+                    <td>{row.temperatureC}</td>
+                    <td>{row.temperatureF}</td>
+                    <td>{row.summary || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );

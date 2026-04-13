@@ -1,10 +1,16 @@
-import axios from "axios";
+import apiClient, { getApiErrorMessage } from "./apiClient";
 
 export const loginUser = async ({ email, password }) => {
-  const response = await axios.post(
-    "http://fcai-attendance-api.runasp.net/api/Authentication/Login",
-    { email, password },
-  );
-  console.log("API Response:", response.data);
-  return response.data;
+  try {
+    const response = await apiClient.post("/api/Authentication/Login", {
+      email,
+      password,
+    });
+
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      getApiErrorMessage(error, "Login failed. Please try again."),
+    );
+  }
 };
