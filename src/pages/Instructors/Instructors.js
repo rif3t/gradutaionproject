@@ -19,6 +19,7 @@ import {
   getInstructors,
   updateInstructor,
 } from "../../services/instructors";
+import { showConfirmAlert, showWarningAlert } from "../../utils/sweetAlerts";
 import "./Instructors.css";
 
 function InstructorsPage() {
@@ -177,7 +178,7 @@ function InstructorsPage() {
       !createForm.password ||
       !createForm.nationalId
     ) {
-      alert("Please complete all required fields.");
+      showWarningAlert("Missing Data", "Please complete all required fields.");
       return;
     }
 
@@ -209,7 +210,7 @@ function InstructorsPage() {
       !editForm.phoneNumber ||
       !editForm.nationalId
     ) {
-      alert("Please complete all required fields.");
+      showWarningAlert("Missing Data", "Please complete all required fields.");
       return;
     }
 
@@ -226,10 +227,14 @@ function InstructorsPage() {
     });
   };
 
-  const handleDelete = (instructor) => {
-    if (
-      window.confirm(`Are you sure you want to delete ${instructor.fullName}?`)
-    ) {
+  const handleDelete = async (instructor) => {
+    const confirmed = await showConfirmAlert({
+      title: "Delete Instructor",
+      text: `Are you sure you want to delete ${instructor.fullName}?`,
+      confirmText: "Delete",
+    });
+
+    if (confirmed) {
       deleteMutation.mutate(instructor.instructorID);
     }
   };

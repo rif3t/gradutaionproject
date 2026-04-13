@@ -19,6 +19,7 @@ import {
   getCourses,
   updateCourse,
 } from "../../services/courses";
+import { showConfirmAlert, showWarningAlert } from "../../utils/sweetAlerts";
 import "./Courses.css";
 
 const semesterOptions = [
@@ -147,7 +148,10 @@ function CoursesPage() {
 
   const handleCreateCourse = () => {
     if (!createForm.courseCode || !createForm.courseName) {
-      alert("Course code and course name are required.");
+      showWarningAlert(
+        "Missing Data",
+        "Course code and course name are required.",
+      );
       return;
     }
 
@@ -161,7 +165,10 @@ function CoursesPage() {
 
   const handleUpdateCourse = () => {
     if (!editForm.courseCode || !editForm.courseName) {
-      alert("Course code and course name are required.");
+      showWarningAlert(
+        "Missing Data",
+        "Course code and course name are required.",
+      );
       return;
     }
 
@@ -176,8 +183,14 @@ function CoursesPage() {
     });
   };
 
-  const handleDeleteCourse = (course) => {
-    if (window.confirm(`Delete course ${course.courseCode}?`)) {
+  const handleDeleteCourse = async (course) => {
+    const confirmed = await showConfirmAlert({
+      title: "Delete Course",
+      text: `Are you sure you want to delete ${course.courseCode}?`,
+      confirmText: "Delete",
+    });
+
+    if (confirmed) {
       deleteMutation.mutate(course.courseId);
     }
   };
