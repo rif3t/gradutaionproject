@@ -29,21 +29,21 @@ function Setting() {
   return (
     <>
       <div className="settingcontent">
-        <h3 className="dashtext">Settings</h3>
+        <h3 className="settingstext">Settings</h3>
         <Container>
           <Row>
             <Col lg={6}>
               <Card className="settingcards">
                 <Card.Body>
-                  <Card.Title>QR Settings</Card.Title>
+                  <Card.Title className="scardtext">QR Settings</Card.Title>
                   <Form>
                     <Form.Group className="mb-3" controlId="formBasicEmail">
-                      <Form.Label>QR Refresh Interval (seconds)</Form.Label>
+                      <Form.Label className="labels">QR Refresh Interval (seconds)</Form.Label>
                       <Form.Control type="number" placeholder="0 (sec)" />
                     </Form.Group>
 
                     <Form.Group className="mb-3" controlId="formBasicPassword">
-                      <Form.Label>QR Token Expiry (seconds)</Form.Label>
+                      <Form.Label className="labels">QR Token Expiry (seconds)</Form.Label>
                       <Form.Control type="number" placeholder="0 (sec)" />
                     </Form.Group>
                     <Form.Group
@@ -64,11 +64,11 @@ function Setting() {
             <Col lg={6}>
               <Card className="settingcards">
                 <Card.Body>
-                  <Card.Title>Location Validation</Card.Title>
+                  <Card.Title className="scardtext">Location Validation</Card.Title>
                   <Form>
                     <fieldset>
                       <Form.Group className="mb-3">
-                        <Form.Label htmlFor="disabledSelect">
+                        <Form.Label className="labels" htmlFor="disabledSelect">
                           Enable GPS Validation
                         </Form.Label>
                         <Form.Select id="disabledSelect">
@@ -77,7 +77,7 @@ function Setting() {
                         </Form.Select>
                       </Form.Group>
                       <Form.Group className="mb-3" controlId="formBasicEmail">
-                        <Form.Label>Allowed Radius (meters)</Form.Label>
+                        <Form.Label className="labels">Allowed Radius (meters)</Form.Label>
                         <Form.Control type="number" placeholder="meters" />
                       </Form.Group>
                       <Form.Group className="mb-3"></Form.Group>
@@ -96,10 +96,10 @@ function Setting() {
             <Col lg={6}>
               <Card className="settingcards">
                 <Card.Body>
-                  <Card.Title>Admin Account</Card.Title>
+                  <Card.Title className="scardtext">Admin Account</Card.Title>
                   <Form onSubmit={handleUpdateProfile}>
                     <Form.Group className="mb-3" controlId="formBasicEmail">
-                      <Form.Label>Admin Name</Form.Label>
+                      <Form.Label className="labels">Admin Name</Form.Label>
                       <Form.Control
                         type="text"
                         name="adminName"
@@ -109,7 +109,7 @@ function Setting() {
                     </Form.Group>
 
                     <Form.Group className="mb-3" controlId="formBasicPassword">
-                      <Form.Label>Admin Email</Form.Label>
+                      <Form.Label className="labels">Admin Email</Form.Label>
                       <Form.Control
                         type="email"
                         name="adminEmail"
@@ -131,14 +131,14 @@ function Setting() {
             <Col lg={6}>
               <Card className="settingcards">
                 <Card.Body>
-                  <Card.Title>Change Password</Card.Title>
+                  <Card.Title className="scardtext">Change Password</Card.Title>
                   <Form>
                     <Form.Group className="mb-3" controlId="formBasicPassword">
-                      <Form.Label>New Password</Form.Label>
+                      <Form.Label className="labels">New Password</Form.Label>
                       <Form.Control type="password" placeholder="Password" />
                     </Form.Group>
                     <Form.Group className="mb-3" controlId="formBasicPassword">
-                      <Form.Label>Confirm Password</Form.Label>
+                      <Form.Label className="labels">Confirm Password</Form.Label>
                       <Form.Control type="password" placeholder="Password" />
                     </Form.Group>
                     <Button

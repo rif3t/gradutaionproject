@@ -259,7 +259,7 @@ function InstructorsPage() {
 
   return (
     <div className="instracontent">
-      <h3 className="dashtext">Instructor Management</h3>
+      <h3 className="instractext">Instructor Management</h3>
 
       <Modal
         show={showCreateModal}
@@ -543,7 +543,6 @@ function InstructorsPage() {
           <Col>
             <Card className="instracinfo">
               <Card.Body>
-                <Card.Title>Instructors List</Card.Title>
                 <div className="nesa">
                   <p className="nesaph">Doctor's Profile</p>
                 </div>
