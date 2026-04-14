@@ -8,6 +8,7 @@
 }
 
 .admin-dashboard {
+  width: 100%;
   min-height: calc(100vh - 90px);
   /* background: radial-gradient(circle at 8% -12%, #d4ebdf 0, transparent 36%),
     radial-gradient(circle at 86% -8%, #d9e2f8 0, transparent 35%),

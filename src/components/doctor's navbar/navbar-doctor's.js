@@ -9,6 +9,9 @@ import {
 import "../Navbar/Navbar.css";
 
 function TopNavbar2() {
+  const fullName = localStorage.getItem("adminName") || "Instructor";
+  const avatarLetter = fullName.charAt(0).toUpperCase();
+
   return (
     <Navbar expand="lg" className="top-navbar-shell">
       <Container fluid className="top-navbar-inner">
@@ -33,8 +36,8 @@ function TopNavbar2() {
             className="profile-chip"
             aria-label="Profile menu"
           >
-            <span className="profile-avatar">A</span>
-            <span className="profile-name">Dr. Ahmed Hassan (instructor)</span>
+            <span className="profile-avatar">{avatarLetter}</span>
+            <span className="profile-name">{fullName} (Instructor)</span>
             <FontAwesomeIcon icon={faCaretDown} className="profile-caret" />
           </button>
         </div>

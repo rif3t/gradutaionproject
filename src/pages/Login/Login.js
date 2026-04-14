@@ -1,65 +1,102 @@
-  import Card from "react-bootstrap/Card";
-  import Button from "react-bootstrap/Button";
-  import Form from "react-bootstrap/Form";
-  import { useMutation } from "@tanstack/react-query";
-  import { useNavigate } from "react-router-dom";  // ✅ شيل data و Navigate
-  import { loginUser } from "../../services/auth";
-  import logoImage from "../../assets/images/logo.png";
-  import "./Login.css";
+import Card from "react-bootstrap/Card";
+import Button from "react-bootstrap/Button";
+import Form from "react-bootstrap/Form";
+import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom"; // ✅ شيل data و Navigate
+import { loginUser } from "../../services/auth";
+import { getDefaultRouteByRole } from "../../routes/roleBasedRoutes";
+import logoImage from "../../assets/images/logo.png";
+import "./Login.css";
 
-  function LoginPage() {
-    const navigate = useNavigate();  // ✅ c صغير
+const getRoleFromToken = (token) => {
+  try {
+    if (!token) {
+      return "";
+    }
 
-    const mutation = useMutation({
-      mutationFn: loginUser,
-      onSuccess: (data) => {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("adminName", data.user?.fullName || "Admin");
-        localStorage.setItem("adminEmail", data.user?.email || "");
-        localStorage.setItem("adminRole", data.user?.role || "");
+    const payload = token.split(".")[1] || "";
+    if (!payload) {
+      return "";
+    }
 
-        const userRole = data.user?.role?.toLowerCase();
-  if (userRole === "admin") {
-          navigate("/dashboard");
-        } 
-        else if (userRole === "instructor") {
-          navigate("/instructor-dashboard");
-        }
-        else {
-          navigate("/unauthorized");
-        }
-      },
-      onError: (error) => {
-        console.log("login error", error.message);
-      },
-    });
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = JSON.parse(window.atob(normalized));
+    return (decoded?.role || "").toLowerCase();
+  } catch {
+    return "";
+  }
+};
 
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      const email = e.target.formBasicEmail.value;
-      const password = e.target.formBasicPassword.value;
-      mutation.mutate({ email, password });
-    };
+function LoginPage() {
+  const navigate = useNavigate(); // ✅ c صغير
 
-    return (
-      <div className="container body col-md-12">
-        <Card className="container border-0 logocard1 col-sm-6">
-          <Card.Body className="cardbody">
-            <Card.Title>
+  const mutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: (data) => {
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("adminName", data.user?.fullName || "Admin");
+      localStorage.setItem("adminEmail", data.user?.email || "");
+      const normalizedRole = (
+        data.user?.role?.toLowerCase() || getRoleFromToken(data.token)
+      ).trim();
+      localStorage.setItem("adminRole", normalizedRole);
+
+      const redirectTo = getDefaultRouteByRole(normalizedRole);
+      navigate(redirectTo);
+    },
+    onError: (error) => {
+      console.log("login error", error.message);
+    },
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const email = e.target.formBasicEmail.value;
+    const password = e.target.formBasicPassword.value;
+    mutation.mutate({ email, password });
+  };
+
+  return (
+    <div className="login-screen">
+      <div className="login-background-orb login-background-orb-left" />
+      <div className="login-background-orb login-background-orb-right" />
+
+      <div className="login-shell container">
+        <Card className="border-0 login-panel login-panel-brand">
+          <Card.Body>
+            <div className="login-brand-top">
               <h1 className="logoname">
                 <span className="F">FC</span> <span className="A">AI</span>
               </h1>
-            </Card.Title>
+              <p className="logotext">FCAI Attendance Platform</p>
+            </div>
 
-            <Card.Text className="logotext">FCAI Attendance</Card.Text>
+            <div className="login-brand-media-wrap">
+              <Card.Img src={logoImage} className="logoimage" alt="FCAI Logo" />
+            </div>
+
+            <div className="brand-pill-list">
+              <span className="brand-pill">Smart Attendance</span>
+              <span className="brand-pill">Secure QR Sessions</span>
+              <span className="brand-pill">Live Monitoring</span>
+            </div>
+          </Card.Body>
+        </Card>
+
+        <Card className="border-0 login-panel login-panel-form">
+          <Card.Body className="cardbody">
+            <Card.Title className="login-form-header">
+              <h2>Welcome Back</h2>
+              <p>Sign in to continue to your dashboard.</p>
+            </Card.Title>
 
             <Form className="form" onSubmit={handleSubmit}>
               <Form.Group className="mb-3" controlId="formBasicEmail">
-                <Form.Label className="email">Email</Form.Label>
+                <Form.Label className="email">University Email</Form.Label>
                 <Form.Control
                   className="username"
                   type="email"
-                  placeholder="Enter email"
+                  placeholder="name@fcai.edu.eg"
                   required
                 />
               </Form.Group>
@@ -69,7 +106,7 @@
                 <Form.Control
                   className="password"
                   type="password"
-                  placeholder="Password"
+                  placeholder="Enter your password"
                   required
                 />
               </Form.Group>
@@ -84,26 +121,14 @@
               </Button>
 
               {mutation.isError && (
-                <p style={{ color: "red", marginTop: "10px" }}>
-                  {mutation.error.message}
-                </p>
+                <p className="login-error-msg">{mutation.error.message}</p>
               )}
             </Form>
           </Card.Body>
         </Card>
-
-        <Card className="container border-0 logocard2 col-md-6 cardbody">
-          <Card.Img
-            variant="right"
-            src={logoImage}
-            className="container logoimage"
-          />
-          <h1 className="logoname2">
-            <span className="F">FC</span> <span className="A">AI</span>
-          </h1>
-        </Card>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
-  export default LoginPage;
+export default LoginPage;

@@ -9,27 +9,23 @@ import StudentsPage from "./pages/Students/Students";
 import CoursesPage from "./pages/Courses/Courses";
 import EnrollmentPage from "./pages/Enrollment/Enrollment";
 import ReportsPage from "./pages/Reports/Reports";
-import InstructorDashboard from "./doctorspages/Tashboar/instructor.dashboard";
+import InstructorDashboard from "./pages/InstructorDashboard/InstructorDashboard";
+import InstructorCoursesPage from "./pages/InstructorDashboard/InstructorCoursesPage";
+import InstructorQrSessionPage from "./pages/InstructorDashboard/InstructorQrSessionPage";
+import InstructorLiveMonitorPage from "./pages/InstructorDashboard/InstructorLiveMonitorPage";
+import InstructorAttendanceRecordsPage from "./pages/InstructorDashboard/InstructorAttendanceRecordsPage";
+import InstructorSessionControlPage from "./pages/InstructorDashboard/InstructorSessionControlPage";
 import DoctorsLayout from "./layouts/doctor'slayout";
+import { ProtectedRoute } from "./routes/roleBasedRoutes";
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const token = localStorage.getItem("token");
-  const userRole = localStorage.getItem("adminRole")?.toLowerCase();
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-  if (allowedRoles && !allowedRoles.includes(userRole)) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
-  return children;
-};
+const Unauthorized = () => <Navigate to="/" replace />;
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/unauthorized" element={<Unauthorized />} />
       <Route element={<MainLayout />}>
         <Route
           path="/dashboard"
@@ -102,7 +98,48 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/instructor-courses"
+          element={
+            <ProtectedRoute allowedRoles={["instructor"]}>
+              <InstructorCoursesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor-qr-session"
+          element={
+            <ProtectedRoute allowedRoles={["instructor"]}>
+              <InstructorQrSessionPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor-live-monitor"
+          element={
+            <ProtectedRoute allowedRoles={["instructor"]}>
+              <InstructorLiveMonitorPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor-attendance-records"
+          element={
+            <ProtectedRoute allowedRoles={["instructor"]}>
+              <InstructorAttendanceRecordsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/instructor-session-control"
+          element={
+            <ProtectedRoute allowedRoles={["instructor"]}>
+              <InstructorSessionControlPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
