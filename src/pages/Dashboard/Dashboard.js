@@ -3,7 +3,7 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Container from "react-bootstrap/Container";
 import "./Dashboard.css";
-import Button from 'react-bootstrap/Button';
+import Button from "react-bootstrap/Button";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -14,103 +14,207 @@ import {
   faFileAlt,
   faUserPlus,
   faCheckCircle,
+  faBookOpen,
+  faArrowRight,
+  faWandMagicSparkles,
+  faBolt,
+  faShieldHalved,
+  faQrcode,
+  faGear,
 } from "@fortawesome/free-solid-svg-icons";
 
 function Dashboard() {
+  const stats = [
+    {
+      title: "Total Instructors",
+      value: "42",
+      delta: "+8% this month",
+      icon: faChalkboardUser,
+      tone: "blue",
+    },
+    {
+      title: "Total Students",
+      value: "1,284",
+      delta: "+12% this month",
+      icon: faUserGraduate,
+      tone: "green",
+    },
+    {
+      title: "Active Courses",
+      value: "36",
+      delta: "Across 4 levels",
+      icon: faBookOpen,
+      tone: "orange",
+    },
+    {
+      title: "QR Sessions Today",
+      value: "118",
+      delta: "94% validated",
+      icon: faQrcode,
+      tone: "navy",
+    },
+  ];
+
   const features = [
-    { icon: faUserGraduate, title: "Student Management", desc: "Create student profiles & manage accounts", color: "#4CAF50" },
-    { icon: faUserPlus, title: "Add to Levels", desc: "Organize students by academic levels", color: "#2196F3" },
-    { icon: faChalkboardUser, title: "Doctor Management", desc: "Add and manage instructors", color: "#FF9800" },
-    { icon: faClock, title: "QR Control", desc: "Set refresh interval & expiry time", color: "#9C27B0" },
-    { icon: faLocationDot, title: "Location Verification", desc: "Enable/Disable GPS & set radius", color: "#F44336" },
-    { icon: faFileAlt, title: "Reports", desc: "Generate course & attendance reports", color: "#607D8B" },
+    {
+      icon: faUserGraduate,
+      title: "Student Management",
+      desc: "Create student profiles and keep enrollment structured.",
+      color: "#35a17f",
+    },
+    {
+      icon: faUserPlus,
+      title: "Level Assignment",
+      desc: "Move students between academic levels in seconds.",
+      color: "#3d7bc9",
+    },
+    {
+      icon: faChalkboardUser,
+      title: "Instructor Control",
+      desc: "Manage instructors, profile data, and activity status.",
+      color: "#d18642",
+    },
+    {
+      icon: faClock,
+      title: "QR Timing",
+      desc: "Fine tune token refresh intervals and expiry windows.",
+      color: "#8762d6",
+    },
+    {
+      icon: faLocationDot,
+      title: "Geo Validation",
+      desc: "Enable GPS protection with custom attendance radius.",
+      color: "#d05c5c",
+    },
+    {
+      icon: faFileAlt,
+      title: "Smart Reports",
+      desc: "Get department and attendance insights instantly.",
+      color: "#56708f",
+    },
+  ];
+
+  const quickActions = [
+    {
+      icon: faBolt,
+      title: "Create New Course",
+      to: "/courses",
+    },
+    {
+      icon: faWandMagicSparkles,
+      title: "Bulk Student Enrollment",
+      to: "/enrollment",
+    },
+    {
+      icon: faShieldHalved,
+      title: "Generate Department Report",
+      to: "/reports",
+    },
+    {
+      icon: faGear,
+      title: "Manage Admin Settings",
+      to: "/Setting",
+    },
   ];
 
   return (
-    <div className="dashcontent">
-      <h3 className="dashtext">Dashboard Overview</h3>
-      
-      {/* Cards Row */}
-      <Container>
-        <Row>
-          <Col lg={4} md={6} sm={12} className="dashcol">
-            <Card className="dashcard">
+    <div className="dashcontent admin-dashboard">
+      <Container fluid>
+        <section className="dash-hero">
+          <div>
+            <p className="dash-kicker">Attendance Control Center</p>
+            <h3 className="dashtext">Dashboard Overview</h3>
+            <p className="dash-subtext">
+              Manage instructors, students, courses, QR attendance, and reports
+              from one unified command panel.
+            </p>
+          </div>
+          <div className="dash-hero-pulse" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+        </section>
+
+        <section className="stats-grid">
+          {stats.map((item) => (
+            <Card
+              key={item.title}
+              className={`dashcard stat-card stat-${item.tone}`}
+            >
               <Card.Body>
-                <Card.Title>👨‍🏫 Total Instructors</Card.Title>
-                <Card.Text>
-                  Some quick example text to build on the card title and make up
-                  the bulk of the card's content.
-                </Card.Text>
+                <div className="stat-top">
+                  <span className="stat-title">{item.title}</span>
+                  <span className="stat-icon-wrap">
+                    <FontAwesomeIcon icon={item.icon} />
+                  </span>
+                </div>
+                <h4 className="stat-value">{item.value}</h4>
+                <p className="stat-delta">{item.delta}</p>
               </Card.Body>
             </Card>
-          </Col>
-          
-          <Col lg={4} md={6} sm={12} className="dashcol">
-            <Card className="dashcard">
-              <Card.Body>
-                <Card.Title>👥 Total Students</Card.Title>
-                <Card.Text>
-                  Some quick example text to build on the card title and make up
-                  the bulk of the card's content.
-                </Card.Text>
-              </Card.Body>
-            </Card>
-          </Col>
-          
-          <Col lg={4} md={12} sm={12} className="dashcol">
-            <Card className="dashcard dashcard3">
-              <Card.Body>
-                <Card.Title>📚 Total Subjects</Card.Title>
-                <Card.Text>
-                  Some quick example text to build on the card title and make up
-                  the bulk of the card's content.
-                </Card.Text>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-      <Container className="dashdigram">
-        <Row>
-          <Col lg={11} md={12} sm={12}>
+          ))}
+        </section>
+
+        <Row className="dash-main-row g-3 g-xl-4">
+          <Col xl={4} lg={5}>
             <Card className="quickuse">
               <Card.Body>
-                <Card.Title className="actiontitle">⚡ Quick Admin Actions</Card.Title>
-                <Button className="quickbtn" variant="outline-success">➕ Create New Course</Button>
-                <Button className="quickbtn" variant="outline-success">👥 Bulk Student Enrollment</Button>
-                <Button className="quickbtn" variant="outline-success">📈 Generate Department Report</Button>
-                <Link to="/Setting">
-                  <Button className="quickbtn" variant="outline-success">⚙️ Manage Admin Users</Button>
-                </Link>
+                <Card.Title className="actiontitle">
+                  Quick Admin Actions
+                </Card.Title>
+                <div className="quick-actions-list">
+                  {quickActions.map((action) => (
+                    <Link
+                      key={action.title}
+                      to={action.to}
+                      className="quick-link-btn"
+                    >
+                      <Button className="quickbtn" variant="light">
+                        <span>
+                          <FontAwesomeIcon icon={action.icon} />
+                        </span>
+                        {action.title}
+                        <FontAwesomeIcon
+                          icon={faArrowRight}
+                          className="quick-arrow"
+                        />
+                      </Button>
+                    </Link>
+                  ))}
+                </div>
               </Card.Body>
             </Card>
           </Col>
-        </Row>
 
-        {/* New Row - Website Guide Card */}
-        <Row className="mt-4">
-          <Col lg={12}>
+          <Col xl={8} lg={7}>
             <Card className="guide-card">
               <Card.Body>
                 <Card.Title className="guide-main-title">
-                  ✨ What You Can Do In This Website
+                  Platform Capabilities
                 </Card.Title>
                 <Card.Text className="guide-main-subtitle">
-                  Complete control over your attendance management system
+                  Tools designed to keep attendance accurate, secure, and easy
+                  to supervise.
                 </Card.Text>
 
                 <Row>
-                  {features.map((feature, index) => (
-                    <Col lg={4} md={6} sm={12} key={index}>
+                  {features.map((feature) => (
+                    <Col lg={6} md={6} sm={12} key={feature.title}>
                       <div className="guide-feature-item">
-                        <div 
-                          className="guide-feature-icon" 
-                          style={{ backgroundColor: `${feature.color}20`, color: feature.color }}
+                        <div
+                          className="guide-feature-icon"
+                          style={{
+                            backgroundColor: `${feature.color}20`,
+                            color: feature.color,
+                          }}
                         >
                           <FontAwesomeIcon icon={feature.icon} size="lg" />
                         </div>
                         <div className="guide-feature-content">
-                          <h6 className="guide-feature-title">{feature.title}</h6>
+                          <h6 className="guide-feature-title">
+                            {feature.title}
+                          </h6>
                           <p className="guide-feature-desc">{feature.desc}</p>
                         </div>
                       </div>
@@ -119,11 +223,15 @@ function Dashboard() {
                 </Row>
 
                 <hr className="guide-divider" />
-                
+
                 <div className="guide-footer">
                   <p className="guide-footer-text">
-                    <FontAwesomeIcon icon={faCheckCircle} className="guide-footer-icon" />
-                    Full control over QR timing, location verification, and attendance reports
+                    <FontAwesomeIcon
+                      icon={faCheckCircle}
+                      className="guide-footer-icon"
+                    />
+                    Full control over QR timing, location validation, and
+                    department-level analytics.
                   </p>
                 </div>
               </Card.Body>
