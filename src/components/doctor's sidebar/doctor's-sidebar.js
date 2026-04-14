@@ -22,7 +22,7 @@ function Sidebar2() {
   };
 
   const navItems = [
-    { label: "Dashboard", icon: faGauge, to: "/dashboard" },
+    { label: "Dashboard", icon: faGauge, to: "/instructor-dashboard" },
     { label: "Instructors", icon: faUserTie, to: "/Instracpage" },
     { label: "Students", icon: faGraduationCap, to: "/students" },
     { label: "Courses", icon: faBookOpen, to: "/courses" },
