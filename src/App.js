@@ -12,63 +12,97 @@ import ReportsPage from "./pages/Reports/Reports";
 import InstructorDashboard from "./doctorspages/Tashboar/instructor.dashboard";
 import DoctorsLayout from "./layouts/doctor'slayout";
 
-
-const ProtectedRoute = ({children,allowedRoles})=>{
+const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem("token");
   const userRole = localStorage.getItem("adminRole")?.toLowerCase();
-  if (!token){
-    return<Navigate to="/login" replace/>;
+  if (!token) {
+    return <Navigate to="/login" replace />;
   }
   if (allowedRoles && !allowedRoles.includes(userRole)) {
     return <Navigate to="/unauthorized" replace />;
   }
-  
-  return children;
-}
 
+  return children;
+};
 
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route element={<MainLayout />}>
-      
-        <Route path="/dashboard" element={
-          <ProtectedRoute allowedRoles={['admin']}> 
-          <Dashboard/>
-          </ProtectedRoute>
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Instracpage"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <InstructorsPage />
+            </ProtectedRoute>
+          }
+        />
 
-        } />
-        <Route path="/Instracpage" element={<ProtectedRoute allowedRoles={['admin']} >
-          <InstructorsPage/>
-        </ProtectedRoute>}/>
+        <Route
+          path="/students"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <StudentsPage />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="/students" element={<ProtectedRoute allowedRoles={['admin']} >
-         <StudentsPage/>
-        </ProtectedRoute>}/>
+        <Route
+          path="/courses"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <CoursesPage />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="/courses" element={<ProtectedRoute allowedRoles={['admin']} >
-         <CoursesPage/>
-        </ProtectedRoute>}/>
+        <Route
+          path="/enrollment"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <EnrollmentPage />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="/enrollment" element={<ProtectedRoute allowedRoles={['admin']} >
-         <EnrollmentPage/>
-        </ProtectedRoute>}/>
-        
-        <Route path="/reports" element={<ProtectedRoute allowedRoles={['admin']} >
-         <ReportsPage/>
-        </ProtectedRoute>}/>
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ReportsPage />
+            </ProtectedRoute>
+          }
+        />
 
-        <Route path="/Setting" element={<ProtectedRoute allowedRoles={['admin']} >
-         <Setting/>
-        </ProtectedRoute>}/>
+        <Route
+          path="/Setting"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Setting />
+            </ProtectedRoute>
+          }
+        />
       </Route>
-      <Route element={<DoctorsLayout/>}>
-        <Route path="//instructor-dashboard" element={<ProtectedRoute allowedRoles={['instructor']} >
-         <InstructorDashboard/>
-        </ProtectedRoute>}/>
+      <Route element={<DoctorsLayout />}>
+        <Route
+          path="//instructor-dashboard"
+          element={
+            <ProtectedRoute allowedRoles={["instructor"]}>
+              <InstructorDashboard />
+            </ProtectedRoute>
+          }
+        />
       </Route>
-      
     </Routes>
   );
 }
