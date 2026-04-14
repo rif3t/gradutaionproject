@@ -1,13 +1,13 @@
 import { Outlet } from "react-router-dom";
-import TopNavbar from "../../src/components/Navbar/Navbar";
-import Sidebar2 from "../components/doctor's sidebar/sidebar2";
+import Sidebar2 from "../components/doctor's sidebar/doctor's-sidebar";
+import TopNavbar2 from "../components/doctor's navbar/navbar-doctor's";
 
 
 function DoctorsLayout() {
   return (
     <div style={{ display: "flex" }}>
       <Sidebar2/>
-      <TopNavbar />
+      <TopNavbar2/>
       <Outlet />
     </div>
   );
