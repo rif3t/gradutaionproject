@@ -1,6 +1,0 @@
-.instrboard {
-  margin-top: 90px;
-  margin-left: calc(var(--sidebar-width) + 12px);
-  padding: 12px 22px 26px;
-  transition: all 0.3s ease;
-}

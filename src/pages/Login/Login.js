@@ -40,7 +40,10 @@ function LoginPage() {
         data.user?.role?.toLowerCase() || getRoleFromToken(data.token)
       ).trim();
       localStorage.setItem("adminRole", normalizedRole);
-
+       if (data.courses && Array.isArray(data.courses)) {
+      localStorage.setItem("userCourses", JSON.stringify(data.courses));
+      console.log("Courses stored:", data.courses); // تتأكد
+    }
       const redirectTo = getDefaultRouteByRole(normalizedRole);
       navigate(redirectTo);
     },

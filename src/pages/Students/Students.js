@@ -1,277 +1,512 @@
-import { useMemo, useState } from "react";
+
+import Button from "react-bootstrap/Button";
+import { Form } from "react-bootstrap";
+import Modal from "react-bootstrap/Modal";
+import Alert from "react-bootstrap/Alert";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faMagnifyingGlass,
-  faGraduationCap,
-  faFileImport,
-  faPlus,
-  faArrowLeft,
+  faUserPlus,
   faEye,
+  faEnvelope,
+  faPhone,
+  faIdCard,
+  faCircleCheck,
+  faCircleXmark,
+  faGraduationCap,
+  faArrowLeft,
+  faMagnifyingGlass,
   faPenToSquare,
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient, useQueries } from "@tanstack/react-query";
+import {
+  createStudent,
+  deleteStudent,
+  getStudentById,
+  getStudents,
+  updateStudent,
+} from "../../services/studentservcies";
+import { showConfirmAlert, showWarningAlert } from "../../utils/sweetAlerts";
 import "./Students.css";
 
-const academicYears = [
-  { key: "first", title: "First Year", count: 120 },
-  { key: "second", title: "Second Year", count: 180 },
-  { key: "third", title: "Third Year", count: 95 },
-  { key: "fourth", title: "Fourth Year", count: 60 },
-];
-
-const studentsByYear = {
-  first: [
-    {
-      id: "2024001",
-      name: "Alaa Ahmed",
-      email: "alaa@fcai.edu.eg",
-      gender: "Female",
-      status: "Active",
-    },
-    {
-      id: "2024002",
-      name: "Omar Khaled",
-      email: "omar@fcai.edu.eg",
-      gender: "Male",
-      status: "Active",
-    },
-    {
-      id: "2024003",
-      name: "Noha Samy",
-      email: "noha@fcai.edu.eg",
-      gender: "Female",
-      status: "Inactive",
-    },
-  ],
-  second: [
-    {
-      id: "2023001",
-      name: "Ali Mohamed",
-      email: "ali@fcai.edu.eg",
-      gender: "Male",
-      status: "Active",
-    },
-    {
-      id: "2023002",
-      name: "Mona Ahmed",
-      email: "mona@fcai.edu.eg",
-      gender: "Female",
-      status: "Active",
-    },
-    {
-      id: "2023003",
-      name: "Youssef Hassan",
-      email: "youssef@fcai.edu.eg",
-      gender: "Male",
-      status: "Inactive",
-    },
-  ],
-  third: [
-    {
-      id: "2023001",
-      name: "Ali Mohamed",
-      email: "ali@fcai.edu.eg",
-      gender: "Male",
-      status: "Active",
-    },
-    {
-      id: "2023002",
-      name: "Mona Ahmed",
-      email: "mona@fcai.edu.eg",
-      gender: "Female",
-      status: "Active",
-    },
-    {
-      id: "2023003",
-      name: "Youssef Hassan",
-      email: "youssef@fcai.edu.eg",
-      gender: "Male",
-      status: "Inactive",
-    },
-    {
-      id: "2023004",
-      name: "Sara Ibrahim",
-      email: "sara@fcai.edu.eg",
-      gender: "Female",
-      status: "Active",
-    },
-    {
-      id: "2023005",
-      name: "Mostafa Adel",
-      email: "mostafa@fcai.edu.eg",
-      gender: "Male",
-      status: "Active",
-    },
-  ],
-  fourth: [
-    {
-      id: "2021001",
-      name: "Nada Hany",
-      email: "nada@fcai.edu.eg",
-      gender: "Female",
-      status: "Active",
-    },
-    {
-      id: "2021002",
-      name: "Karim Wael",
-      email: "karim@fcai.edu.eg",
-      gender: "Male",
-      status: "Active",
-    },
-  ],
-};
-
 function StudentsPage() {
-  const [selectedYear, setSelectedYear] = useState(null);
-  const [search, setSearch] = useState("");
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const [createForm, setCreateForm] = useState({
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    nationalId: "",
+    password: "",
+    departmentName: "Computer Science",
+    isActive: true,
+  });
+  const [editForm, setEditForm] = useState({
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    nationalId: "",
+    password: "",
+    departmentName: "Computer Science",
+    isActive: true,
+  });
 
-  const filteredStudents = useMemo(() => {
-    const currentStudents = studentsByYear[selectedYear] || [];
-    const term = search.trim().toLowerCase();
-    if (!term) return currentStudents;
-    return currentStudents.filter(
-      (student) =>
-        student.name.toLowerCase().includes(term) ||
-        student.id.toLowerCase().includes(term) ||
-        student.email.toLowerCase().includes(term),
+  const yearsQueries = useQueries({
+    queries: [1, 2, 3, 4].map((level) => ({
+      queryKey: ["students-count", level],
+      queryFn: () => getStudents({ Level: level, PageSize: 1 }),
+      staleTime: 60000,
+    })),
+  });
+  const yearsStats = [1, 2, 3, 4].map((level, index) => ({
+    level,
+    count: yearsQueries[index]?.data?.totalCount ?? 0,
+    isLoading: yearsQueries[index]?.isLoading,
+  }));
+  const {
+    data: studentsResponse,
+    isLoading,
+    isError,
+    error,
+    isFetching,
+  } = useQuery({
+    queryKey: ["students", selectedLevel, searchTerm],
+    queryFn: () =>
+      getStudents({
+        Search: searchTerm,
+        Level: selectedLevel,
+        PageNumber: 1,
+        PageSize: 100,
+      }),
+    enabled: !!selectedLevel,
+  });
+
+  const {
+    data: selectedStudentDetails,
+    isLoading: isDetailsLoading,
+  } = useQuery({
+    queryKey: ["student-details", selectedStudentId],
+    queryFn: () => getStudentById(selectedStudentId),
+    enabled: !!selectedStudentId && (showViewModal || showEditModal),
+  });
+
+  useEffect(() => {
+    if (showEditModal && selectedStudentDetails) {
+      setEditForm({
+        fullName: selectedStudentDetails.fullName || "",
+        email: selectedStudentDetails.email || "",
+        phoneNumber: selectedStudentDetails.phoneNumber || "",
+        nationalId: selectedStudentDetails.nationalId || "",
+        password: "",
+        departmentName: selectedStudentDetails.departmentName || "Computer Science",
+        isActive: Boolean(selectedStudentDetails.isActive),
+      });
+    }
+  }, [selectedStudentDetails, showEditModal]);
+
+  const invalidateCounts = () => {
+    queryClient.invalidateQueries({ queryKey: ["students-count"] });
+  };
+
+  const createMutation = useMutation({
+    mutationFn: createStudent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      invalidateCounts();
+      handleCloseCreateModal();
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }) => updateStudent(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["student-details"] });
+      invalidateCounts();
+      handleCloseEditModal();
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteStudent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      invalidateCounts();
+    },
+  });
+
+  const students = studentsResponse?.students || [];
+
+  const handleLevelSelect = (level) => {
+    setSelectedLevel(level);
+    setSearchTerm("");
+  };
+
+  const handleBackToLevels = () => {
+    setSelectedLevel(null);
+    setSearchTerm("");
+  };
+
+  const handleOpenCreateModal = () => setShowCreateModal(true);
+  const handleCloseCreateModal = () => {
+    setShowCreateModal(false);
+    setCreateForm({
+      fullName: "",
+      email: "",
+      phoneNumber: "",
+      nationalId: "",
+      password: "",
+      departmentName: "Computer Science",
+      isActive: true,
+    });
+  };
+
+  const handleCloseViewModal = () => {
+    setShowViewModal(false);
+    setSelectedStudentId(null);
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setSelectedStudentId(null);
+    setEditForm({
+      fullName: "",
+      email: "",
+      phoneNumber: "",
+      nationalId: "",
+      password: "",
+      departmentName: "Computer Science",
+      isActive: true,
+    });
+  };
+
+  const handleCreateInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setCreateForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleAddStudent = () => {
+    if (
+      !createForm.fullName ||
+      !createForm.email ||
+      !createForm.phoneNumber ||
+      !createForm.nationalId ||
+      !createForm.password
+    ) {
+      showWarningAlert("Missing Data", "Please complete all required fields (including password).");
+      return;
+    }
+    createMutation.mutate({
+      fullName: createForm.fullName,
+      email: createForm.email,
+      phoneNumber: createForm.phoneNumber,
+      nationalId: createForm.nationalId,
+      password: createForm.password,
+      level: selectedLevel,
+      departmentName: createForm.departmentName,
+      isActive: createForm.isActive,
+    });
+  };
+
+  const handleView = (id) => {
+    setSelectedStudentId(id);
+    setShowViewModal(true);
+  };
+
+  const handleEdit = (id) => {
+    setSelectedStudentId(id);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateStudent = () => {
+    if (
+      !editForm.fullName ||
+      !editForm.email ||
+      !editForm.phoneNumber ||
+      !editForm.nationalId
+    ) {
+      showWarningAlert("Missing Data", "Please complete all required fields.");
+      return;
+    }
+    const payload = {
+      fullName: editForm.fullName,
+      email: editForm.email,
+      phoneNumber: editForm.phoneNumber,
+      nationalId: editForm.nationalId,
+      level: selectedStudentDetails?.level || selectedLevel,
+      departmentName: editForm.departmentName,
+      isActive: editForm.isActive,
+    };
+    if (editForm.password) {
+      payload.password = editForm.password;
+    }
+    updateMutation.mutate({
+      id: selectedStudentId,
+      payload,
+    });
+  };
+
+  const handleDelete = async (student) => {
+    const confirmed = await showConfirmAlert({
+      title: "Delete Student",
+      text: `Are you sure you want to delete ${student.fullName}?`,
+      confirmText: "Delete",
+    });
+    if (confirmed) {
+      deleteMutation.mutate(student.studentId);
+    }
+  };
+
+  const studentInitials = selectedStudentDetails?.fullName
+    ? selectedStudentDetails.fullName
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase())
+        .join("")
+    : "ST";
+
+  if (!selectedLevel) {
+    return (
+      <div className="students-page-wrap">
+        <header className="students-header">
+          <h2>Student Management</h2>
+          <p>Select an academic year to view and manage students</p>
+        </header>
+        <section className="years-grid">
+          {yearsStats.map(({ level, count, isLoading }) => (
+            <button
+              key={level}
+              type="button"
+              className="year-card"
+              onClick={() => handleLevelSelect(level)}
+            >
+              <FontAwesomeIcon icon={faGraduationCap} className="year-icon" />
+              <h3>
+                {level === 1 ? "First" : level === 2 ? "Second" : level === 3 ? "Third" : "Fourth"} Year
+              </h3>
+              <p>{isLoading ? "Loading..." : `${count} student${count !== 1 ? 's' : ''}`}</p>
+            </button>
+          ))}
+        </section>
+      </div>
     );
-  }, [selectedYear, search]);
-
-  const selectedYearLabel =
-    academicYears.find((year) => year.key === selectedYear)?.title || "";
-
+  }
   return (
     <div className="students-page-wrap">
-      {!selectedYear ? (
-        <>
-          <header className="students-header">
-            <h2>Student Management</h2>
-            <p>Select an academic year to view and manage students</p>
-          </header>
+      <header className="students-header students-header-list">
+        <div>
+          <button type="button" className="back-btn" onClick={handleBackToLevels}>
+            <FontAwesomeIcon icon={faArrowLeft} /> Back to years
+          </button>
+          <h2>
+            Students -{" "}
+            {selectedLevel === 1 ? "First" : selectedLevel === 2 ? "Second" : selectedLevel === 3 ? "Third" : "Fourth"} Year
+          </h2>
+        </div>
+      </header>
 
-          <section className="years-grid">
-            {academicYears.map((year) => (
-              <button
-                key={year.key}
-                type="button"
-                className="year-card"
-                onClick={() => setSelectedYear(year.key)}
-              >
-                <FontAwesomeIcon icon={faGraduationCap} className="year-icon" />
-                <h3>{year.title}</h3>
-                <p>{year.count} students</p>
-              </button>
-            ))}
-          </section>
-        </>
-      ) : (
-        <>
-          <header className="students-header students-header-list">
-            <div>
-              <button
-                type="button"
-                className="back-btn"
-                onClick={() => {
-                  setSelectedYear(null);
-                  setSearch("");
-                }}
-              >
-                <FontAwesomeIcon icon={faArrowLeft} /> Back to years
-              </button>
-              <h2>Students - {selectedYearLabel}</h2>
-            </div>
-          </header>
+      <div className="students-toolbar">
+        <label className="search-shell" htmlFor="students-search">
+          <FontAwesomeIcon icon={faMagnifyingGlass} />
+          <input
+            id="students-search"
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search students by name, ID, email, or national ID"
+          />
+        </label>
+        <button type="button" className="btn-primary" onClick={handleOpenCreateModal}>
+          <FontAwesomeIcon icon={faUserPlus} /> Add Student
+        </button>
+      </div>
 
-          <div className="students-toolbar">
-            <label className="search-shell" htmlFor="students-search">
-              <FontAwesomeIcon icon={faMagnifyingGlass} />
-              <input
-                id="students-search"
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search students by name, ID, or email"
-              />
-            </label>
-
-            <button type="button" className="btn-secondary">
-              <FontAwesomeIcon icon={faFileImport} /> Import Students
-            </button>
-
-            <button type="button" className="btn-primary">
-              <FontAwesomeIcon icon={faPlus} /> Add Student
-            </button>
-          </div>
-
-          <section className="students-table-card">
-            <h3>Students List</h3>
-
-            <div className="table-scroll">
-              <table className="students-table">
-                <thead>
-                  <tr>
-                    <th>Student ID</th>
-                    <th>Student Name</th>
-                    <th>Email</th>
-                    <th>Gender</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredStudents.length > 0 ? (
-                    filteredStudents.map((student) => (
-                      <tr key={student.id}>
-                        <td className="student-id">{student.id}</td>
-                        <td>
-                          <div className="student-name-wrap">
-                            <span className="avatar-pill">
-                              {student.name.charAt(0).toUpperCase()}
-                            </span>
-                            <span>{student.name}</span>
-                          </div>
-                        </td>
-                        <td className="student-email">{student.email}</td>
-                        <td>{student.gender}</td>
-                        <td>
-                          <span
-                            className={`status-pill ${
-                              student.status === "Active"
-                                ? "status-active"
-                                : "status-inactive"
-                            }`}
-                          >
-                            {student.status}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="action-icons">
-                            <button type="button" title="View">
-                              <FontAwesomeIcon icon={faEye} />
-                            </button>
-                            <button type="button" title="Edit">
-                              <FontAwesomeIcon icon={faPenToSquare} />
-                            </button>
-                            <button type="button" title="Delete">
-                              <FontAwesomeIcon icon={faTrashCan} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="6" className="empty-state">
-                        No students match "{search}".
+      <section className="students-table-card">
+        <h3>Students List</h3>
+        {isLoading || isFetching ? (
+          <div className="loading-spinner">Loading...</div>
+        ) : isError ? (
+          <Alert variant="danger">{error.message}</Alert>
+        ) : (
+          <div className="table-scroll">
+            <table className="students-table">
+              <thead>
+                <tr>
+                  <th>Student ID</th>
+                  <th>Student Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>National ID</th>
+                  {selectedLevel === 4 && <th>Department</th>}
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {students.length > 0 ? (
+                  students.map((student) => (
+                    <tr key={student.studentId}>
+                      <td className="student-id">{student.studentId}</td>
+                      <td>
+                        <div className="student-name-wrap">
+                          <span className="avatar-pill">{student.fullName?.charAt(0).toUpperCase()}</span>
+                          <span>{student.fullName}</span>
+                        </div>
+                      </td>
+                      <td className="student-email">{student.email}</td>
+                      <td>{student.phoneNumber || "—"}</td>
+                      <td>{student.nationalId || "—"}</td>
+                      {selectedLevel === 4 && <td>{student.departmentName || "—"}</td>}
+                      <td>
+                        <span className={`status-pill ${student.isActive ? "status-active" : "status-inactive"}`}>
+                          {student.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="action-icons">
+                          <button type="button" title="View" onClick={() => handleView(student.studentId)}>
+                            <FontAwesomeIcon icon={faEye} />
+                          </button>
+                          <button type="button" title="Edit" onClick={() => handleEdit(student.studentId)}>
+                            <FontAwesomeIcon icon={faPenToSquare} />
+                          </button>
+                          <button type="button" title="Delete" onClick={() => handleDelete(student)}>
+                            <FontAwesomeIcon icon={faTrashCan} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={selectedLevel === 4 ? 8 : 7} className="empty-state">
+                      {searchTerm ? `No students match "${searchTerm}".` : "No students found"}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* المودالات كما هي (لم تتغير) */}
+      <Modal show={showCreateModal} onHide={handleCloseCreateModal} centered dialogClassName="app-modal">
+        <Modal.Header closeButton>
+          <Modal.Title>Add New Student - Year {selectedLevel}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form className="app-modal-form">
+            <Form.Control name="fullName" placeholder="Full Name *" onChange={handleCreateInputChange} value={createForm.fullName} className="mb-2" />
+            <Form.Control name="email" placeholder="Email *" onChange={handleCreateInputChange} value={createForm.email} className="mb-2" />
+            <Form.Control name="phoneNumber" placeholder="Phone Number *" onChange={handleCreateInputChange} value={createForm.phoneNumber} className="mb-2" />
+            <Form.Control name="nationalId" placeholder="National ID (14 digits) *" onChange={handleCreateInputChange} value={createForm.nationalId} className="mb-2" />
+            <Form.Control name="password" type="password" placeholder="Password *" onChange={handleCreateInputChange} value={createForm.password} className="mb-2" />
+            <Form.Select name="departmentName" onChange={handleCreateInputChange} value={createForm.departmentName} className="mb-2">
+              <option value="Computer Science">Computer Science</option>
+              <option value="Information Systems">Information Systems</option>
+              <option value="Information Technology">Information Technology</option>
+            </Form.Select>
+            <Form.Check type="switch" label="Active" name="isActive" checked={createForm.isActive} onChange={handleCreateInputChange} className="mb-2" />
+            {createMutation.isError && <Alert variant="danger">{createMutation.error.message}</Alert>}
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseCreateModal}>Cancel</Button>
+          <Button variant="success" onClick={handleAddStudent} disabled={createMutation.isPending}>
+            {createMutation.isPending ? "Saving..." : "Add Student"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={showViewModal} onHide={handleCloseViewModal} centered dialogClassName="app-modal instructor-details-modal">
+        <Modal.Header closeButton>
+          <Modal.Title>Student Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {isDetailsLoading ? <p>Loading details...</p> : selectedStudentDetails ? (
+            <div className="instructor-details-shell">
+              <div className="instructor-details-hero">
+                <div className="instructor-details-avatar-fallback">{studentInitials}</div>
+                <div className="instructor-details-title-block">
+                  <h4>{selectedStudentDetails.fullName}</h4>
+                  <span className="instructor-details-subtitle">Student Profile</span>
+                  <span className={`instructor-status-chip ${selectedStudentDetails.isActive ? "instructor-status-active" : "instructor-status-inactive"}`}>
+                    <FontAwesomeIcon icon={selectedStudentDetails.isActive ? faCircleCheck : faCircleXmark} />
+                    {selectedStudentDetails.isActive ? "Active" : "Inactive"}
+                  </span>
+                </div>
+              </div>
+              <div className="instructor-details-grid">
+                <div className="instructor-detail-card">
+                  <FontAwesomeIcon icon={faEnvelope} />
+                  <div><p>Email</p><h6>{selectedStudentDetails.email}</h6></div>
+                </div>
+                <div className="instructor-detail-card">
+                  <FontAwesomeIcon icon={faPhone} />
+                  <div><p>Phone</p><h6>{selectedStudentDetails.phoneNumber}</h6></div>
+                </div>
+                <div className="instructor-detail-card">
+                  <FontAwesomeIcon icon={faIdCard} />
+                  <div><p>National ID</p><h6>{selectedStudentDetails.nationalId}</h6></div>
+                </div>
+                <div className="instructor-detail-card">
+                  <FontAwesomeIcon icon={faGraduationCap} />
+                  <div><p>Year / Dept</p><h6>Year {selectedStudentDetails.level} - {selectedStudentDetails.departmentName}</h6></div>
+                </div>
+              </div>
             </div>
-          </section>
-        </>
-      )}
+          ) : <p>No details available.</p>}
+        </Modal.Body>
+      </Modal>
+
+      <Modal show={showEditModal} onHide={handleCloseEditModal} centered dialogClassName="app-modal">
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Student</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {isDetailsLoading ? <p>Loading...</p> : (
+            <Form className="app-modal-form">
+              <Form.Control name="fullName" placeholder="Full Name *" onChange={handleEditInputChange} value={editForm.fullName} className="mb-2" />
+              <Form.Control name="email" placeholder="Email *" onChange={handleEditInputChange} value={editForm.email} className="mb-2" />
+              <Form.Control name="phoneNumber" placeholder="Phone Number *" onChange={handleEditInputChange} value={editForm.phoneNumber} className="mb-2" />
+              <Form.Control name="nationalId" placeholder="National ID *" onChange={handleEditInputChange} value={editForm.nationalId} className="mb-2" />
+              <Form.Control name="password" type="password" placeholder="New Password (leave blank to keep current)" onChange={handleEditInputChange} value={editForm.password} className="mb-2" />
+              <Form.Select name="departmentName" onChange={handleEditInputChange} value={editForm.departmentName} className="mb-2">
+                <option value="Computer Science">Computer Science</option>
+                <option value="Information Systems">Information Systems</option>
+                <option value="Information Technology">Information Technology</option>
+              </Form.Select>
+              <Form.Check type="switch" label="Active" name="isActive" checked={editForm.isActive} onChange={handleEditInputChange} />
+              {updateMutation.isError && <Alert variant="danger">{updateMutation.error.message}</Alert>}
+            </Form>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseEditModal}>Cancel</Button>
+          <Button variant="success" onClick={handleUpdateStudent} disabled={updateMutation.isPending}>
+            {updateMutation.isPending ? "Saving..." : "Save Changes"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
