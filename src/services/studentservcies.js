@@ -1,7 +1,6 @@
 // src/services/studentservcies.js
 import apiClient, { getApiErrorMessage } from "./apiClient";
 
-// جلب قائمة الطلاب (GET)
 export const getStudents = async ({ Search = "", PageNumber = 1, PageSize = 100, Level, IsActive } = {}) => {
   try {
     const response = await apiClient.get("/api/Students", {
@@ -22,7 +21,6 @@ export const getStudents = async ({ Search = "", PageNumber = 1, PageSize = 100,
   }
 };
 
-// جلب طالب واحد بالـ ID (GET)
 export const getStudentById = async (id) => {
   try {
     const response = await apiClient.get(`/api/Students/${id}`);
@@ -31,8 +29,6 @@ export const getStudentById = async (id) => {
     throw new Error(getApiErrorMessage(error, "Failed to fetch student details."));
   }
 };
-
-// إضافة طالب جديد (POST)
 export const createStudent = async (payload) => {
   try {
     const response = await apiClient.post("/api/Students", payload);
@@ -42,7 +38,6 @@ export const createStudent = async (payload) => {
   }
 };
 
-// تعديل طالب (PUT)
 export const updateStudent = async (id, payload) => {
   try {
     const response = await apiClient.put(`/api/Students/${id}`, payload);
@@ -51,8 +46,6 @@ export const updateStudent = async (id, payload) => {
     throw new Error(getApiErrorMessage(error, "Failed to update student."));
   }
 };
-
-// حذف طالب (DELETE)
 export const deleteStudent = async (id) => {
   try {
     await apiClient.delete(`/api/Students/${id}`);
