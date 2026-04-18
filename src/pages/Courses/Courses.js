@@ -12,6 +12,7 @@ import {
   faCalendarDays,
   faBuildingColumns,
   faChalkboardUser,
+  faUserPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
@@ -23,8 +24,10 @@ import {
   getCourseById,
   getCourses,
   updateCourse,
+  assignInstructorToCourse,
 } from "../../services/courses";
-import { showConfirmAlert, showWarningAlert } from "../../utils/sweetAlerts";
+import { getInstructors } from "../../services/instructors";
+import { showConfirmAlert, showWarningAlert, showSuccessAlert } from "../../utils/sweetAlerts";
 import "./Courses.css";
 
 const semesterOptions = [
@@ -48,7 +51,9 @@ function CoursesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState(null);
+  const [selectedInstructorId, setSelectedInstructorId] = useState("");
   const [createForm, setCreateForm] = useState({
     courseCode: "",
     courseName: "",
@@ -80,13 +85,16 @@ function CoursesPage() {
       }),
   });
 
-  const { data: selectedCourseDetails, isLoading: isDetailsLoading } = useQuery(
-    {
-      queryKey: ["course-details", selectedCourseId],
-      queryFn: () => getCourseById(selectedCourseId),
-      enabled: !!selectedCourseId && (showViewModal || showEditModal),
-    },
-  );
+  const { data: selectedCourseDetails, isLoading: isDetailsLoading } = useQuery({
+    queryKey: ["course-details", selectedCourseId],
+    queryFn: () => getCourseById(selectedCourseId),
+    enabled: !!selectedCourseId && (showViewModal || showEditModal),
+  });
+
+  const { data: instructorsResponse } = useQuery({
+    queryKey: ["instructors"],
+    queryFn: () => getInstructors({ PageSize: 100 }),
+  });
 
   useEffect(() => {
     if (showEditModal && selectedCourseDetails) {
@@ -120,6 +128,21 @@ function CoursesPage() {
     mutationFn: deleteCourse,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["courses"] });
+    },
+  });
+
+  const assignMutation = useMutation({
+    mutationFn: ({ courseId, instructorId }) =>
+      assignInstructorToCourse(courseId, instructorId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["course-details", selectedCourseId] });
+      queryClient.invalidateQueries({ queryKey: ["courses"] }); // لتحديث الجدول
+      setShowAssignModal(false);
+      setSelectedInstructorId("");
+      showSuccessAlert("Success", "Instructor assigned successfully.");
+    },
+    onError: (error) => {
+      showWarningAlert("Error", error.message);
     },
   });
 
@@ -209,6 +232,25 @@ function CoursesPage() {
     setSelectedCourseId(courseId);
     setShowEditModal(true);
   };
+    setSelectedCourseId(courseId);
+    setShowAssignModal(true);
+  };
+
+  const handleAssignInstructor = () => {
+    if (!selectedInstructorId) {
+      showWarningAlert("No selection", "Please select an instructor.");
+      return;
+    }
+    const instructorIdNumber = Number(selectedInstructorId);
+    if (isNaN(instructorIdNumber) || instructorIdNumber <= 0) {
+      showWarningAlert("Invalid selection", "Selected instructor ID is not valid.");
+      return;
+    }
+    assignMutation.mutate({
+      courseId: selectedCourseId,
+      instructorId: instructorIdNumber,
+    });
+  };
 
   const courseBadgeText = selectedCourseDetails?.courseCode
     ? selectedCourseDetails.courseCode.slice(0, 6).toUpperCase()
@@ -219,7 +261,6 @@ function CoursesPage() {
       <header className="courses-header">
         <h2>Course Management</h2>
       </header>
-
       <Modal
         show={showCreateModal}
         onHide={handleCloseCreateModal}
@@ -304,7 +345,6 @@ function CoursesPage() {
           </Button>
         </Modal.Footer>
       </Modal>
-
       <Modal
         show={showViewModal}
         onHide={handleCloseViewModal}
@@ -382,12 +422,83 @@ function CoursesPage() {
                   </div>
                 </article>
               </div>
+
+              <div className="text-center mt-4">
+                <Button
+                  variant="primary"
+                  onClick={() => setShowAssignModal(true)}
+                  disabled={assignMutation.isPending}
+                >
+                  <FontAwesomeIcon icon={faChalkboardUser} /> Assign Instructor
+                </Button>
+              </div>
             </div>
           ) : (
             <p>No details available.</p>
           )}
         </Modal.Body>
       </Modal>
+
+
+      <Modal
+        show={showAssignModal}
+        onHide={() => {
+          setShowAssignModal(false);
+          setSelectedInstructorId("");
+          setSelectedCourseId(null);
+        }}
+        centered
+        dialogClassName="app-modal"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Assign Instructor to Course</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Select
+            value={selectedInstructorId}
+            onChange={(e) => setSelectedInstructorId(e.target.value)}
+          >
+            <option value="">-- Select an instructor --</option>
+            {instructorsResponse?.data?.map((instructor) => {
+              const idValue = instructor?.id ?? instructor?.instructorId ?? instructor?.instructorID ?? instructor?._id;
+              if (!idValue) {
+                console.warn("Instructor missing ID field", instructor);
+                return null;
+              }
+              return (
+                <option key={idValue} value={idValue}>
+                  {instructor.fullName} {instructor.email ? `(${instructor.email})` : ""}
+                </option>
+              );
+            })}
+          </Form.Select>
+          {assignMutation.isError && (
+            <Alert variant="danger" className="mt-2">
+              {assignMutation.error.message}
+            </Alert>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setShowAssignModal(false);
+              setSelectedInstructorId("");
+              setSelectedCourseId(null);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="success"
+            onClick={handleAssignInstructor}
+            disabled={assignMutation.isPending}
+          >
+            {assignMutation.isPending ? "Assigning..." : "Confirm"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
 
       <Modal
         show={showEditModal}
@@ -477,6 +588,7 @@ function CoursesPage() {
           </Button>
         </Modal.Footer>
       </Modal>
+
 
       <div className="courses-toolbar">
         <label className="courses-search-shell" htmlFor="course-search">
@@ -585,6 +697,15 @@ function CoursesPage() {
                           onClick={() => handleEditCourse(course.courseId)}
                         >
                           <FontAwesomeIcon icon={faPenToSquare} />
+                        </button>
+  
+
+                        <button
+                          type="button"
+                          title="Assign Instructor"
+                          onClick={() => handleOpenAssignModal(course.courseId)}
+                        >
+                          <FontAwesomeIcon icon={faUserPlus} />
                         </button>
                         <button
                           type="button"
