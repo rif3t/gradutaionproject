@@ -8,32 +8,39 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 function OverviewCards({ overview }) {
+  const safeOverview = {
+    coursesCount: overview?.coursesCount || 0,
+    studentsCount: overview?.studentsCount || 0,
+    lecturesCount: overview?.lecturesCount || 0,
+    attendanceRate: overview?.attendanceRate || 0,
+  };
+
   const cards = [
     {
       title: "Current Courses",
-      value: overview.coursesCount,
-      subtitle: "Assigned this semester",
+      value: safeOverview.coursesCount,
+      subtitle: "GET /instructor/dashboard",
       icon: faBookOpen,
       tone: "blue",
     },
     {
       title: "Total Students",
-      value: overview.studentsCount,
-      subtitle: "Across all your courses",
+      value: safeOverview.studentsCount,
+      subtitle: "GET /instructor/dashboard/stats",
       icon: faUserGraduate,
       tone: "green",
     },
     {
       title: "Total Lectures",
-      value: overview.lecturesCount,
-      subtitle: "Completed this term",
+      value: safeOverview.lecturesCount,
+      subtitle: "GET /instructor/dashboard/summary",
       icon: faChalkboard,
       tone: "orange",
     },
     {
       title: "Attendance Rate",
-      value: `${overview.attendanceRate}%`,
-      subtitle: "Overall attendance performance",
+      value: `${safeOverview.attendanceRate}%`,
+      subtitle: "GET /instructor/dashboard/attendance-overview",
       icon: faChartSimple,
       tone: "navy",
     },

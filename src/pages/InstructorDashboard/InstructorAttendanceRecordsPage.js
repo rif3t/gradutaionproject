@@ -1,30 +1,43 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect } from "react";
 import Container from "react-bootstrap/Container";
 import AttendanceRecordsTable from "../../components/instructor/AttendanceRecordsTable";
-import StudentDetailsModal from "../../components/instructor/StudentDetailsModal";
 import InstructorPageHero from "../../components/instructor/InstructorPageHero";
 import { useInstructorWorkspace } from "../../context/InstructorWorkspaceContext";
 import "../Dashboard/Dashboard.css";
 import "./InstructorDashboard.css";
 
 function InstructorAttendanceRecordsPage() {
-  const { records, studentStats } = useInstructorWorkspace();
-  const [filterDate, setFilterDate] = useState("");
-  const [filterStudent, setFilterStudent] = useState("");
-  const [selectedStudentName, setSelectedStudentName] = useState("");
-  const [showStudentModal, setShowStudentModal] = useState(false);
+  const {
+    attendanceQuery,
+    attendanceData,
+    attendanceSummary,
+    attendanceState,
+    actionState,
+    loadAttendanceRecords,
+    attendanceBulkAction,
+    reviewAttendance,
+    exportAttendance,
+  } = useInstructorWorkspace();
 
-  const selectedStudent = useMemo(() => {
-    return (
-      studentStats.find((item) => item.studentName === selectedStudentName) ||
-      null
-    );
-  }, [studentStats, selectedStudentName]);
+  useEffect(() => {
+    loadAttendanceRecords();
+    // Initial load only to avoid callback-identity loops.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleViewStudent = (studentName) => {
-    setSelectedStudentName(studentName);
-    setShowStudentModal(true);
-  };
+  const handleFilters = useCallback(
+    (patch) => {
+      loadAttendanceRecords(patch);
+    },
+    [loadAttendanceRecords],
+  );
+
+  const handleSort = useCallback(
+    (sortBy, order) => {
+      loadAttendanceRecords({ sortBy, order, page: 1 });
+    },
+    [loadAttendanceRecords],
+  );
 
   return (
     <div className="dashcontent admin-dashboard instructor-dashboard-page">
@@ -36,21 +49,21 @@ function InstructorAttendanceRecordsPage() {
 
         <div className="dash-main-row">
           <AttendanceRecordsTable
-            records={records}
-            filterDate={filterDate}
-            filterStudent={filterStudent}
-            onFilterDateChange={setFilterDate}
-            onFilterStudentChange={setFilterStudent}
-            onViewStudent={handleViewStudent}
+            records={attendanceData.items}
+            summary={attendanceSummary}
+            query={attendanceQuery}
+            meta={attendanceData.meta}
+            state={attendanceState}
+            actionState={actionState}
+            onFilterChange={handleFilters}
+            onPageChange={(page) => handleFilters({ page })}
+            onSortChange={handleSort}
+            onBulkAction={(action) => attendanceBulkAction(action, { ids: [] })}
+            onReview={reviewAttendance}
+            onExport={exportAttendance}
           />
         </div>
       </Container>
-
-      <StudentDetailsModal
-        show={showStudentModal}
-        student={selectedStudent}
-        onHide={() => setShowStudentModal(false)}
-      />
     </div>
   );
 }
