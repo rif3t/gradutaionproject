@@ -1,6 +1,5 @@
 import Button from "react-bootstrap/Button";
-import { Col, Container, Form, Row } from "react-bootstrap";
-import Card from "react-bootstrap/Card";
+import { Form } from "react-bootstrap";
 import Modal from "react-bootstrap/Modal";
 import Alert from "react-bootstrap/Alert";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -14,6 +13,7 @@ import {
   faIdCard,
   faCircleCheck,
   faCircleXmark,
+  faMagnifyingGlass,
 } from "@fortawesome/free-solid-svg-icons";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -244,10 +244,6 @@ function InstructorsPage() {
     }
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-  };
-
   const instructorInitials = selectedInstructorDetails?.fullName
     ? selectedInstructorDetails.fullName
         .split(" ")
@@ -258,9 +254,12 @@ function InstructorsPage() {
     : "IN";
 
   return (
-    <div className="instracontent">
-      <h3 className="instractext">Instructor Management</h3>
+    <div className="instructors-page-wrap">
+      <header className="instructors-header">
+        <h2>Instructor Management</h2>
+      </header>
 
+      {/* Modals */}
       <Modal
         show={showCreateModal}
         onHide={handleCloseCreateModal}
@@ -514,113 +513,114 @@ function InstructorsPage() {
         </Modal.Footer>
       </Modal>
 
-      <Container>
-        <Row>
-          <Col lg={12}>
-            <Form className="d-flex" inline onSubmit={handleSearch}>
-              <Form.Control
-                type="text"
-                placeholder="Search instructors by name or email..."
-                className="search-input-custom"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <Button
-                className="add-btn-custom searchbtn"
-                variant="success"
-                onClick={handleOpenCreateModal}
-              >
-                <FontAwesomeIcon icon={faUserPlus} className="me-1" /> Add
-                Instructor
-              </Button>
-            </Form>
-          </Col>
-        </Row>
-      </Container>
+      {/* Toolbar */}
+      <div className="instructors-toolbar">
+        <div className="instructors-search-shell">
+          <FontAwesomeIcon icon={faMagnifyingGlass} />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search instructors by name or email..."
+          />
+        </div>
 
-      <Container>
-        <Row>
-          <Col>
-            <Card className="instracinfo">
-              <Card.Body>
-                <div className="nesa">
-                  <p className="nesaph">Doctor's Profile</p>
-                </div>
-                <div className="listtab">
-                  <Card className="instructor-table-card">
-                    <Card.Body>
-                      {isLoading || isFetching ? (
-                        <div className="no-results">Loading instructors...</div>
-                      ) : isError ? (
-                        <Alert variant="danger" className="mb-0">
-                          {error.message}
-                        </Alert>
-                      ) : (
-                        <div className="custom-table-new">
-                          {instructors.length > 0 ? (
-                            instructors.map((instructor) => (
-                              <div
-                                className="table-row-new"
-                                key={instructor.instructorID}
-                              >
-                                <div className="row-all-items">
-                                  <span className="instructor-name-new">
-                                    {instructor.fullName}
-                                  </span>
-                                  <span className="instructor-email">
-                                    {instructor.email}
-                                  </span>
-                                  <span className="status">
-                                    {instructor.isActive
-                                      ? "Active"
-                                      : "Inactive"}
-                                  </span>
-                                  <div className="action-buttons-new">
-                                    <button
-                                      className="eyebtn"
-                                      onClick={() =>
-                                        handleView(instructor.instructorID)
-                                      }
-                                      title="View"
-                                    >
-                                      <FontAwesomeIcon icon={faEye} />
-                                    </button>
-                                    <button
-                                      className="editbtn"
-                                      onClick={() =>
-                                        handleEdit(instructor.instructorID)
-                                      }
-                                      title="Edit"
-                                    >
-                                      <FontAwesomeIcon icon={faEdit} />
-                                    </button>
-                                    <button
-                                      className="delbtn"
-                                      disabled={deleteMutation.isPending}
-                                      onClick={() => handleDelete(instructor)}
-                                      title="Delete"
-                                    >
-                                      <FontAwesomeIcon icon={faTrash} />
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="no-results">
-                              No instructors found for "{searchTerm}"
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </Card.Body>
-                  </Card>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
+        <button
+          type="button"
+          className="instructors-add-btn"
+          onClick={handleOpenCreateModal}
+        >
+          <FontAwesomeIcon icon={faUserPlus} /> Add Instructor
+        </button>
+      </div>
+
+      {/* Table */}
+      <section className="instructors-table-card">
+        <h3>Instructors List</h3>
+
+        <div className="instructors-table-scroll">
+          <table className="instructors-table">
+            <thead>
+              <tr>
+                <th>Instructor Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading || isFetching ? (
+                <tr>
+                  <td className="instructors-empty-state" colSpan="5">
+                    Loading instructors...
+                  </td>
+                </tr>
+              ) : isError ? (
+                <tr>
+                  <td colSpan="5">
+                    <Alert variant="danger" className="mb-0">
+                      {error.message}
+                    </Alert>
+                  </td>
+                </tr>
+              ) : instructors.length > 0 ? (
+                instructors.map((instructor) => (
+                  <tr key={instructor.instructorID}>
+                    <td className="instructor-name">
+                      <div className="instructor-name-wrap">
+                        <span className="avatar-pill">
+                          {instructor.fullName?.charAt(0).toUpperCase()}
+                        </span>
+                        <span>{instructor.fullName}</span>
+                      </div>
+                    </td>
+                    <td className="instructor-email">{instructor.email}</td>
+                    <td>{instructor.phoneNumber || "—"}</td>
+                    <td>
+                      <span className={`status-pill ${instructor.isActive ? "status-active" : "status-inactive"}`}>
+                        {instructor.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="instructor-action-icons">
+                        <button
+                          type="button"
+                          title="View"
+                          onClick={() => handleView(instructor.instructorID)}
+                        >
+                          <FontAwesomeIcon icon={faEye} />
+                        </button>
+                        <button
+                          type="button"
+                          title="Edit"
+                          onClick={() => handleEdit(instructor.instructorID)}
+                        >
+                          <FontAwesomeIcon icon={faEdit} />
+                        </button>
+                        <button
+                          type="button"
+                          title="Delete"
+                          onClick={() => handleDelete(instructor)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td className="instructors-empty-state" colSpan="5">
+                    {searchTerm ? `No instructors match "${searchTerm}".` : "No instructors found"}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </div>
   );
 }

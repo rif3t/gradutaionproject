@@ -232,6 +232,7 @@ function CoursesPage() {
     setSelectedCourseId(courseId);
     setShowEditModal(true);
   };
+  const handleOpenAssignModal = (courseId) => {
     setSelectedCourseId(courseId);
     setShowAssignModal(true);
   };
