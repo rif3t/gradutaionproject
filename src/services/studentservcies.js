@@ -1,7 +1,13 @@
 // src/services/studentservcies.js
 import apiClient, { getApiErrorMessage } from "./apiClient";
 
-export const getStudents = async ({ Search = "", PageNumber = 1, PageSize = 100, Level, IsActive } = {}) => {
+export const getStudents = async ({
+  Search = "",
+  PageNumber = 1,
+  PageSize = 100,
+  Level,
+  IsActive,
+} = {}) => {
   try {
     const response = await apiClient.get("/api/Students", {
       params: {
@@ -26,7 +32,9 @@ export const getStudentById = async (id) => {
     const response = await apiClient.get(`/api/Students/${id}`);
     return response.data;
   } catch (error) {
-    throw new Error(getApiErrorMessage(error, "Failed to fetch student details."));
+    throw new Error(
+      getApiErrorMessage(error, "Failed to fetch student details."),
+    );
   }
 };
 export const createStudent = async (payload) => {
@@ -51,5 +59,16 @@ export const deleteStudent = async (id) => {
     await apiClient.delete(`/api/Students/${id}`);
   } catch (error) {
     throw new Error(getApiErrorMessage(error, "Failed to delete student."));
+  }
+};
+
+export const getMyStudentProfile = async () => {
+  try {
+    const response = await apiClient.get("/api/Students/me/profile");
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      getApiErrorMessage(error, "Failed to fetch student profile."),
+    );
   }
 };

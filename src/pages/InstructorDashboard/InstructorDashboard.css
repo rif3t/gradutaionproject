@@ -422,6 +422,72 @@
   padding: 10px 12px;
 }
 
+.flow-rail {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.flow-step {
+  border: 1px dashed #cddcf0;
+  border-radius: 12px;
+  background: #f8fbff;
+  color: #5d7396;
+  font-size: 0.86rem;
+  font-weight: 700;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flow-step span {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #e2ecfb;
+  color: #2f4f7d;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+.flow-step.active,
+.flow-step.done {
+  border-style: solid;
+  border-color: #bcd2ef;
+  background: #edf5ff;
+  color: #27466f;
+}
+
+.flow-step.done span,
+.flow-step.active span {
+  background: #d0e3fb;
+}
+
+.plain-list li.plain-list-selected {
+  border-color: #9abde8;
+  background: #eff6ff;
+}
+
+.student-search-box {
+  border: 1px solid #dbe6f6;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.session-health .progress {
+  height: 10px;
+  border-radius: 999px;
+  background: #e8eef7;
+}
+
+.session-health .progress-bar {
+  background: linear-gradient(90deg, #3576b4, #41976f);
+}
+
 .student-stat-box p {
   margin: 0;
   color: #6c7f99;

@@ -60,15 +60,59 @@ export const deleteCourse = async (id) => {
     throw new Error(getApiErrorMessage(error, "Failed to delete course."));
   }
 };
+
 export const assignInstructorToCourse = async (courseId, instructorId) => {
   try {
-    const response = await apiClient.put(`/api/Courses/${courseId}/instructor/${instructorId}`);
+    const response = await apiClient.put(
+      `/api/Courses/${courseId}/instructor/${instructorId}`,
+    );
     return response.data;
   } catch (error) {
     if (error.response) {
       console.error("Status:", error.response.status);
       console.error("Data:", error.response.data);
     }
-    throw new Error(getApiErrorMessage(error, "Failed to assign instructor to course."));
+    throw new Error(
+      getApiErrorMessage(error, "Failed to assign instructor to course."),
+    );
+  }
+};
+
+export const removeInstructorFromCourse = async (courseId) => {
+  try {
+    const response = await apiClient.delete(
+      `/api/Courses/${courseId}/instructor`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      getApiErrorMessage(error, "Failed to remove instructor from course."),
+    );
+  }
+};
+
+export const assignDepartmentToCourse = async (courseId, departmentId) => {
+  try {
+    const response = await apiClient.put(
+      `/api/Courses/${courseId}/department/${departmentId}`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      getApiErrorMessage(error, "Failed to assign department to course."),
+    );
+  }
+};
+
+export const removeDepartmentFromCourse = async (courseId) => {
+  try {
+    const response = await apiClient.delete(
+      `/api/Courses/${courseId}/department`,
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      getApiErrorMessage(error, "Failed to remove department from course."),
+    );
   }
 };

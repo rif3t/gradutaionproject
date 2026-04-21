@@ -106,3 +106,14 @@ export const deleteInstructor = async (id) => {
     throw new Error(getApiErrorMessage(error, "Failed to delete instructor."));
   }
 };
+
+export const getMyInstructorCourses = async () => {
+  try {
+    const response = await apiClient.get("/api/Instructors/my-courses");
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      getApiErrorMessage(error, "Failed to fetch instructor courses."),
+    );
+  }
+};

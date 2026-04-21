@@ -81,8 +81,8 @@ function InstructorCoursesPage() {
   );
 
   const handleCourseAction = useCallback(
-    async (action, courseId) => {
-      await runCourseAction(action, courseId);
+    async (action, courseId, actionOptions = {}) => {
+      await runCourseAction(action, courseId, actionOptions);
     },
     [runCourseAction],
   );
@@ -92,7 +92,7 @@ function InstructorCoursesPage() {
       <Container fluid>
         <InstructorPageHero
           title="My Courses"
-          subtitle="Manage your course list and start a lecture attendance session."
+          subtitle="Pick a course, open its lectures, start or reopen a session, then monitor QR attendance live."
         />
 
         <div className="dash-main-row">

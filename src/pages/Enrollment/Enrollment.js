@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTrashCan,
@@ -29,25 +29,34 @@ const getCourseId = (course) => course?.courseId;
 const getCourseName = (course) => course?.courseName || "Unknown Course";
 const getCourseCode = (course) => course?.courseCode || "";
 const getCourseLevel = (course) => course?.level;
-const getCourseInstructor = (course) => course?.instructorName || "Not Assigned";
+const getCourseInstructor = (course) =>
+  course?.instructorName || "Not Assigned";
 
 // ========== دوال مساعدة لاستخراج بيانات الطالب (متوافقة مع StudentsPage) ==========
-const getStudentId = (student) => student?.studentId ?? student?.id ?? student?.Id;
-const getStudentName = (student) => student?.fullName ?? student?.name ?? student?.Name ?? "Unknown";
+const getStudentId = (student) =>
+  student?.studentId ?? student?.id ?? student?.Id;
+const getStudentName = (student) =>
+  student?.fullName ?? student?.name ?? student?.Name ?? "Unknown";
 const getStudentYear = (student) => {
   const level = student?.level ?? student?.year ?? student?.academicYear;
-  if (typeof level === 'number') {
-    const yearMap = { 1: "1st Year", 2: "2nd Year", 3: "3rd Year", 4: "4th Year" };
+  if (typeof level === "number") {
+    const yearMap = {
+      1: "1st Year",
+      2: "2nd Year",
+      3: "3rd Year",
+      4: "4th Year",
+    };
     return yearMap[level] || `${level}th Year`;
   }
   return level || "";
 };
-const getStudentMajor = (student) => student?.departmentName ?? student?.major ?? student?.department ?? "";
+const getStudentMajor = (student) =>
+  student?.departmentName ?? student?.major ?? student?.department ?? "";
 
 // استخراج الرقم من السنة (للتصفية)
 const extractYearNumber = (yearStr) => {
   if (!yearStr) return null;
-  if (typeof yearStr === 'number') return yearStr;
+  if (typeof yearStr === "number") return yearStr;
   const match = String(yearStr).match(/\d+/);
   return match ? parseInt(match[0]) : null;
 };
@@ -55,7 +64,12 @@ const extractYearNumber = (yearStr) => {
 // تحويل المستوى إلى سنة أكاديمية
 const getYearFromLevel = (level) => {
   if (!level) return "Not specified";
-  const yearMap = { 1: "1st Year", 2: "2nd Year", 3: "3rd Year", 4: "4th Year" };
+  const yearMap = {
+    1: "1st Year",
+    2: "2nd Year",
+    3: "3rd Year",
+    4: "4th Year",
+  };
   return yearMap[level] || `${level}th Year`;
 };
 
@@ -66,13 +80,15 @@ function EnrollmentPage() {
   const [enrollError, setEnrollError] = useState("");
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   const [studentSearchTerm, setStudentSearchTerm] = useState("");
   const [studentYearFilter, setStudentYearFilter] = useState("");
   const [studentMajorFilter, setStudentMajorFilter] = useState("");
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const [currentCourseForEnrollment, setCurrentCourseForEnrollment] = useState("");
-  
+  const [currentCourseForEnrollment, setCurrentCourseForEnrollment] = useState(
+    "",
+  );
+
   const [coursesList, setCoursesList] = useState([]);
   const [currentEnrollments, setCurrentEnrollments] = useState([]);
   const [eligibleStudents, setEligibleStudents] = useState([]);
@@ -91,14 +107,14 @@ function EnrollmentPage() {
         PageNumber: 1,
         PageSize: 100,
       });
-      
+
       const courses = response?.data || [];
-      
+
       console.log("Courses loaded:", courses);
       if (courses.length > 0) {
         console.log("First course sample:", courses[0]);
       }
-      
+
       setCoursesList(courses);
     } catch (error) {
       console.error("Error fetching courses:", error);
@@ -110,7 +126,7 @@ function EnrollmentPage() {
   };
 
   // جلب جميع التسجيلات
-  const fetchAllEnrollments = async () => {
+  const fetchAllEnrollments = useCallback(async () => {
     if (coursesList.length === 0) return;
     setLoading(true);
     try {
@@ -119,10 +135,10 @@ function EnrollmentPage() {
         if (!courseId) return null;
         try {
           const studentsResponse = await getCourseStudents(courseId);
-          
+
           let studentsArray = [];
           const data = studentsResponse?.data || studentsResponse;
-          
+
           if (Array.isArray(data)) {
             studentsArray = data;
           } else if (data?.data && Array.isArray(data.data)) {
@@ -134,11 +150,11 @@ function EnrollmentPage() {
           } else {
             studentsArray = [];
           }
-          
+
           const level = getCourseLevel(course);
           const year = getYearFromLevel(level);
           const instructor = getCourseInstructor(course);
-          
+
           return {
             id: courseId,
             course: getCourseName(course),
@@ -147,7 +163,9 @@ function EnrollmentPage() {
             studentsCount: studentsArray.length,
             year: year,
             level: level,
-            enrolledStudents: studentsArray.map(s => getStudentId(s)).filter(Boolean),
+            enrolledStudents: studentsArray
+              .map((s) => getStudentId(s))
+              .filter(Boolean),
             studentsData: studentsArray,
           };
         } catch (err) {
@@ -156,13 +174,13 @@ function EnrollmentPage() {
         }
       });
       const results = await Promise.all(enrollmentsPromises);
-      setCurrentEnrollments(results.filter(r => r !== null));
+      setCurrentEnrollments(results.filter((r) => r !== null));
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [coursesList]);
 
   // جلب الطلاب المؤهلين للتسجيل
   const fetchEligibleStudents = async (courseId) => {
@@ -171,10 +189,10 @@ function EnrollmentPage() {
       const courseIdNumber = Number(courseId);
       console.log("Fetching eligible students for course ID:", courseIdNumber);
       const response = await getEligibleStudents(courseIdNumber);
-      
+
       let students = [];
       const data = response?.data || response;
-      
+
       if (Array.isArray(data)) {
         students = data;
       } else if (data?.data && Array.isArray(data.data)) {
@@ -186,14 +204,17 @@ function EnrollmentPage() {
       } else {
         students = [];
       }
-      
-      console.log("Eligible students sample:", students.slice(0, 3).map(s => ({
-        id: getStudentId(s),
-        name: getStudentName(s),
-        year: getStudentYear(s),
-        major: getStudentMajor(s)
-      })));
-      
+
+      console.log(
+        "Eligible students sample:",
+        students.slice(0, 3).map((s) => ({
+          id: getStudentId(s),
+          name: getStudentName(s),
+          year: getStudentYear(s),
+          major: getStudentMajor(s),
+        })),
+      );
+
       setEligibleStudents(students);
     } catch (error) {
       console.error(error);
@@ -210,10 +231,10 @@ function EnrollmentPage() {
     try {
       const response = await getCourseStudents(courseId);
       console.log(`View: Raw response for course ${courseId}:`, response);
-      
+
       let students = [];
       const data = response?.data || response;
-      
+
       if (Array.isArray(data)) {
         students = data;
       } else if (data?.data && Array.isArray(data.data)) {
@@ -225,8 +246,10 @@ function EnrollmentPage() {
       } else {
         students = [];
       }
-      
-      console.log(`View: Extracted ${students.length} students for ${courseName}`);
+
+      console.log(
+        `View: Extracted ${students.length} students for ${courseName}`,
+      );
       setCourseStudentsList(students);
       setShowStudentsModal(true);
     } catch (error) {
@@ -294,7 +317,7 @@ function EnrollmentPage() {
     }
     const courseIdNumber = Number(enrollCourse);
     console.log("Selected course ID (numeric):", courseIdNumber);
-    
+
     setEnrollError("");
     setCurrentCourseForEnrollment(courseIdNumber);
     await fetchEligibleStudents(courseIdNumber);
@@ -306,21 +329,23 @@ function EnrollmentPage() {
     const studentName = getStudentName(student).toLowerCase();
     const studentYearRaw = getStudentYear(student);
     const studentMajor = getStudentMajor(student);
-    
+
     const studentYearNum = extractYearNumber(studentYearRaw);
     const filterYearNum = extractYearNumber(studentYearFilter);
-    
-    const matchesSearch = studentName.includes(studentSearchTerm.toLowerCase()) ||
-                          studentId.includes(studentSearchTerm);
+
+    const matchesSearch =
+      studentName.includes(studentSearchTerm.toLowerCase()) ||
+      studentId.includes(studentSearchTerm);
     const matchesYear = !studentYearFilter || studentYearNum === filterYearNum;
-    const matchesMajor = !studentMajorFilter || studentMajor === studentMajorFilter;
-    
+    const matchesMajor =
+      !studentMajorFilter || studentMajor === studentMajorFilter;
+
     return matchesSearch && matchesYear && matchesMajor;
   });
 
   const isStudentEnrolled = (studentId) => {
     const courseEnrollment = currentEnrollments.find(
-      (item) => item.id?.toString() === enrollCourse?.toString()
+      (item) => item.id?.toString() === enrollCourse?.toString(),
     );
     return courseEnrollment?.enrolledStudents?.includes(studentId) || false;
   };
@@ -328,18 +353,25 @@ function EnrollmentPage() {
   const toggleStudentSelection = (studentId) => {
     if (!studentId) return;
     if (isStudentEnrolled(studentId)) return;
-    setSelectedStudents(prev =>
-      prev.includes(studentId) ? prev.filter(id => id !== studentId) : [...prev, studentId]
+    setSelectedStudents((prev) =>
+      prev.includes(studentId)
+        ? prev.filter((id) => id !== studentId)
+        : [...prev, studentId],
     );
   };
 
   const toggleSelectAll = () => {
-    const availableStudents = filteredStudents.filter(s => {
+    const availableStudents = filteredStudents.filter((s) => {
       const sid = getStudentId(s);
       return !isStudentEnrolled(sid);
     });
-    const availableIds = availableStudents.map(s => getStudentId(s)).filter(Boolean);
-    if (selectedStudents.length === availableIds.length && availableIds.length > 0) {
+    const availableIds = availableStudents
+      .map((s) => getStudentId(s))
+      .filter(Boolean);
+    if (
+      selectedStudents.length === availableIds.length &&
+      availableIds.length > 0
+    ) {
       setSelectedStudents([]);
     } else {
       setSelectedStudents(availableIds);
@@ -350,20 +382,20 @@ function EnrollmentPage() {
     console.log("=== Enrollment Debug ===");
     console.log("Course ID being used:", enrollCourse);
     console.log("Selected student IDs:", selectedStudents);
-    
+
     if (selectedStudents.length === 0) {
       setEnrollError("Please select at least one student.");
       return;
     }
-    
+
     const courseIdNumber = Number(enrollCourse);
     console.log("Enrolling with course ID (numeric):", courseIdNumber);
-    
+
     setLoading(true);
     try {
       await bulkEnrollStudents(courseIdNumber, selectedStudents);
       console.log("Enrollment successful!");
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       await fetchAllEnrollments();
       if (selectedCourseForView?.id === courseIdNumber) {
         await handleViewCourseStudents(courseIdNumber, getCurrentCourseName());
@@ -387,23 +419,30 @@ function EnrollmentPage() {
   };
 
   const isAllSelected = () => {
-    const availableStudents = filteredStudents.filter(s => {
+    const availableStudents = filteredStudents.filter((s) => {
       const sid = getStudentId(s);
       return !isStudentEnrolled(sid);
     });
-    const availableIds = availableStudents.map(s => getStudentId(s)).filter(Boolean);
-    return availableIds.length > 0 && selectedStudents.length === availableIds.length;
+    const availableIds = availableStudents
+      .map((s) => getStudentId(s))
+      .filter(Boolean);
+    return (
+      availableIds.length > 0 && selectedStudents.length === availableIds.length
+    );
   };
 
-  const filteredEnrollments = currentEnrollments.filter(item =>
-    item.course?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.instructor?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.year?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredEnrollments = currentEnrollments.filter(
+    (item) =>
+      item.course?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.instructor?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.year?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const getCurrentCourseName = () => {
     if (!coursesList.length || !enrollCourse) return "";
-    const course = coursesList.find(c => getCourseId(c)?.toString() === enrollCourse?.toString());
+    const course = coursesList.find(
+      (c) => getCourseId(c)?.toString() === enrollCourse?.toString(),
+    );
     return getCourseName(course);
   };
 
@@ -413,13 +452,15 @@ function EnrollmentPage() {
 
   useEffect(() => {
     if (coursesList.length > 0) fetchAllEnrollments();
-  }, [coursesList]);
+  }, [coursesList, fetchAllEnrollments]);
 
   return (
     <div className="enrollment-page-wrap">
       <header className="enrollment-page-head">
         <h2 className="enrollment-page-title">Enrollment Management</h2>
-        <p className="enrollment-page-subtitle">Manage course enrollments and assignments.</p>
+        <p className="enrollment-page-subtitle">
+          Manage course enrollments and assignments.
+        </p>
       </header>
 
       <section className="enrollment-table-card">
@@ -428,12 +469,24 @@ function EnrollmentPage() {
           <div className="enrollment-actions">
             <label className="enrollment-search-shell">
               <FontAwesomeIcon icon={faMagnifyingGlass} />
-              <input type="text" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search..." />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search..."
+              />
             </label>
-            <button className="enrollment-refresh-btn" onClick={handleRefresh} disabled={refreshing}>
+            <button
+              className="enrollment-refresh-btn"
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
               <FontAwesomeIcon icon={faRefresh} spin={refreshing} /> Refresh
             </button>
-            <button className="enrollment-add-btn" onClick={handleOpenEnrollModal}>
+            <button
+              className="enrollment-add-btn"
+              onClick={handleOpenEnrollModal}
+            >
               <FontAwesomeIcon icon={faPlus} /> Enroll Students
             </button>
           </div>
@@ -457,16 +510,27 @@ function EnrollmentPage() {
                   </td>
                 </tr>
               ) : filteredEnrollments.length > 0 ? (
-                filteredEnrollments.map(item => (
+                filteredEnrollments.map((item) => (
                   <tr key={item.id}>
-                    <td>{item.courseCode ? `${item.courseCode} - ` : ""}{item.course}</td>
+                    <td>
+                      {item.courseCode ? `${item.courseCode} - ` : ""}
+                      {item.course}
+                    </td>
                     <td>{item.instructor}</td>
                     <td>
-                      <span className="students-count-badge">{item.studentsCount} student{item.studentsCount !== 1 ? 's' : ''}</span>
+                      <span className="students-count-badge">
+                        {item.studentsCount} student
+                        {item.studentsCount !== 1 ? "s" : ""}
+                      </span>
                     </td>
                     <td>{item.year}</td>
                     <td>
-                      <button className="enrollment-view-btn" onClick={() => handleViewCourseStudents(item.id, item.course)}>
+                      <button
+                        className="enrollment-view-btn"
+                        onClick={() =>
+                          handleViewCourseStudents(item.id, item.course)
+                        }
+                      >
                         <FontAwesomeIcon icon={faEye} /> View
                       </button>
                     </td>
@@ -474,7 +538,9 @@ function EnrollmentPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="enrollment-empty-row">No enrollments yet.</td>
+                  <td colSpan="5" className="enrollment-empty-row">
+                    No enrollments yet.
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -483,28 +549,54 @@ function EnrollmentPage() {
       </section>
 
       {/* Modal عرض الطلاب المسجلين */}
-      <Modal show={showStudentsModal} onHide={() => setShowStudentsModal(false)} centered size="lg" dialogClassName="app-modal students-modal">
+      <Modal
+        show={showStudentsModal}
+        onHide={() => setShowStudentsModal(false)}
+        centered
+        size="lg"
+        dialogClassName="app-modal students-modal"
+      >
         <Modal.Header closeButton>
           <Modal.Title>
             <FontAwesomeIcon icon={faUserGraduate} className="me-2" />
             Enrolled Students - {selectedCourseForView?.name}
-            <Button variant="link" size="sm" onClick={() => handleViewCourseStudents(selectedCourseForView?.id, selectedCourseForView?.name)} style={{ color: 'white', marginLeft: '12px' }}>
+            <Button
+              variant="link"
+              size="sm"
+              onClick={() =>
+                handleViewCourseStudents(
+                  selectedCourseForView?.id,
+                  selectedCourseForView?.name,
+                )
+              }
+              style={{ color: "white", marginLeft: "12px" }}
+            >
               <FontAwesomeIcon icon={faRefresh} />
             </Button>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {loadingCourseStudents ? (
-            <div className="text-center p-4"><FontAwesomeIcon icon={faSpinner} spin /> Loading...</div>
+            <div className="text-center p-4">
+              <FontAwesomeIcon icon={faSpinner} spin /> Loading...
+            </div>
           ) : courseStudentsList.length === 0 ? (
-            <div className="text-center p-4">No students enrolled in this course.</div>
+            <div className="text-center p-4">
+              No students enrolled in this course.
+            </div>
           ) : (
             <table className="students-table">
               <thead>
-                <tr><th>ID</th><th>Name</th><th>Year</th><th>Major</th><th>Action</th></tr>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Year</th>
+                  <th>Major</th>
+                  <th>Action</th>
+                </tr>
               </thead>
               <tbody>
-                {courseStudentsList.map(student => {
+                {courseStudentsList.map((student) => {
                   const sid = getStudentId(student);
                   return (
                     <tr key={sid}>
@@ -513,7 +605,12 @@ function EnrollmentPage() {
                       <td>{getStudentYear(student) || "-"}</td>
                       <td>{getStudentMajor(student) || "-"}</td>
                       <td>
-                        <button className="enrollment-remove-btn" onClick={() => handleRemoveStudent(selectedCourseForView?.id, sid)}>
+                        <button
+                          className="enrollment-remove-btn"
+                          onClick={() =>
+                            handleRemoveStudent(selectedCourseForView?.id, sid)
+                          }
+                        >
                           <FontAwesomeIcon icon={faTrashCan} /> Remove
                         </button>
                       </td>
@@ -524,25 +621,47 @@ function EnrollmentPage() {
             </table>
           )}
         </Modal.Body>
-        <Modal.Footer><Button variant="secondary" onClick={() => setShowStudentsModal(false)}>Close</Button></Modal.Footer>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowStudentsModal(false)}
+          >
+            Close
+          </Button>
+        </Modal.Footer>
       </Modal>
 
       {/* Modal اختيار المادة للتسجيل */}
-      <Modal show={showEnrollModal && !currentCourseForEnrollment} onHide={handleCloseEnrollModal} centered dialogClassName="app-modal enroll-modal">
+      <Modal
+        show={showEnrollModal && !currentCourseForEnrollment}
+        onHide={handleCloseEnrollModal}
+        centered
+        dialogClassName="app-modal enroll-modal"
+      >
         <Modal.Header closeButton>
-          <Modal.Title><FontAwesomeIcon icon={faUserGraduate} /> Enroll Students</Modal.Title>
+          <Modal.Title>
+            <FontAwesomeIcon icon={faUserGraduate} /> Enroll Students
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form className="app-modal-form">
             <Form.Group className="mb-3">
               <Form.Label>Select Course</Form.Label>
-              <Form.Select value={enrollCourse} onChange={e => setEnrollCourse(e.target.value)}>
+              <Form.Select
+                value={enrollCourse}
+                onChange={(e) => setEnrollCourse(e.target.value)}
+              >
                 <option value="">Choose a course</option>
-                {coursesList.map(course => {
+                {coursesList.map((course) => {
                   const cid = getCourseId(course);
                   const code = getCourseCode(course);
                   const name = getCourseName(course);
-                  return <option key={cid} value={cid}>{code ? `${code} - ` : ""}{name}</option>;
+                  return (
+                    <option key={cid} value={cid}>
+                      {code ? `${code} - ` : ""}
+                      {name}
+                    </option>
+                  );
                 })}
               </Form.Select>
             </Form.Group>
@@ -550,31 +669,57 @@ function EnrollmentPage() {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseEnrollModal}><FontAwesomeIcon icon={faTimes} /> Cancel</Button>
-          <Button variant="success" onClick={handleProceedToStudentSelection}><FontAwesomeIcon icon={faCheck} /> Next: Select Students</Button>
+          <Button variant="secondary" onClick={handleCloseEnrollModal}>
+            <FontAwesomeIcon icon={faTimes} /> Cancel
+          </Button>
+          <Button variant="success" onClick={handleProceedToStudentSelection}>
+            <FontAwesomeIcon icon={faCheck} /> Next: Select Students
+          </Button>
         </Modal.Footer>
       </Modal>
 
       {/* Modal اختيار الطلاب للتسجيل */}
-      <Modal show={showEnrollModal && !!currentCourseForEnrollment} onHide={handleCloseEnrollModal} centered size="lg" dialogClassName="app-modal students-modal">
+      <Modal
+        show={showEnrollModal && !!currentCourseForEnrollment}
+        onHide={handleCloseEnrollModal}
+        centered
+        size="lg"
+        dialogClassName="app-modal students-modal"
+      >
         <Modal.Header closeButton>
-          <Modal.Title><FontAwesomeIcon icon={faUserGraduate} /> Enroll Students - {getCurrentCourseName()}</Modal.Title>
+          <Modal.Title>
+            <FontAwesomeIcon icon={faUserGraduate} /> Enroll Students -{" "}
+            {getCurrentCourseName()}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <div className="students-filters">
             <div className="students-search">
               <FontAwesomeIcon icon={faMagnifyingGlass} />
-              <input type="text" placeholder="Search..." value={studentSearchTerm} onChange={e => setStudentSearchTerm(e.target.value)} />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={studentSearchTerm}
+                onChange={(e) => setStudentSearchTerm(e.target.value)}
+              />
             </div>
             <div className="filters-row">
-              <select className="filter-select" value={studentYearFilter} onChange={e => setStudentYearFilter(e.target.value)}>
+              <select
+                className="filter-select"
+                value={studentYearFilter}
+                onChange={(e) => setStudentYearFilter(e.target.value)}
+              >
                 <option value="">All Years</option>
                 <option value="1st Year">1st Year</option>
                 <option value="2nd Year">2nd Year</option>
                 <option value="3rd Year">3rd Year</option>
                 <option value="4th Year">4th Year</option>
               </select>
-              <select className="filter-select" value={studentMajorFilter} onChange={e => setStudentMajorFilter(e.target.value)}>
+              <select
+                className="filter-select"
+                value={studentMajorFilter}
+                onChange={(e) => setStudentMajorFilter(e.target.value)}
+              >
                 <option value="">All Majors</option>
                 <option>Computer Science</option>
                 <option>Information Systems</option>
@@ -584,13 +729,24 @@ function EnrollmentPage() {
           </div>
           <div className="students-table-container">
             {loadingStudents ? (
-              <div className="text-center p-4"><FontAwesomeIcon icon={faSpinner} spin /> Loading...</div>
+              <div className="text-center p-4">
+                <FontAwesomeIcon icon={faSpinner} spin /> Loading...
+              </div>
             ) : (
               <table className="students-table">
                 <thead>
                   <tr>
                     <th className="checkbox-col">
-                      <input type="checkbox" checked={isAllSelected()} onChange={toggleSelectAll} disabled={filteredStudents.filter(s => !isStudentEnrolled(getStudentId(s))).length === 0} />
+                      <input
+                        type="checkbox"
+                        checked={isAllSelected()}
+                        onChange={toggleSelectAll}
+                        disabled={
+                          filteredStudents.filter(
+                            (s) => !isStudentEnrolled(getStudentId(s)),
+                          ).length === 0
+                        }
+                      />
                     </th>
                     <th>Student ID</th>
                     <th>Student Name</th>
@@ -601,13 +757,23 @@ function EnrollmentPage() {
                 </thead>
                 <tbody>
                   {filteredStudents.length > 0 ? (
-                    filteredStudents.map(student => {
+                    filteredStudents.map((student) => {
                       const sid = getStudentId(student);
                       const already = isStudentEnrolled(sid);
                       return (
-                        <tr key={sid} className={already ? "already-enrolled" : ""}>
+                        <tr
+                          key={sid}
+                          className={already ? "already-enrolled" : ""}
+                        >
                           <td className="checkbox-col">
-                            <input type="checkbox" checked={selectedStudents.includes(sid) || already} onChange={() => toggleStudentSelection(sid)} disabled={already} />
+                            <input
+                              type="checkbox"
+                              checked={
+                                selectedStudents.includes(sid) || already
+                              }
+                              onChange={() => toggleStudentSelection(sid)}
+                              disabled={already}
+                            />
                           </td>
                           <td>{sid}</td>
                           <td>{getStudentName(student)}</td>
@@ -634,14 +800,33 @@ function EnrollmentPage() {
               </table>
             )}
           </div>
-          <div className="selected-summary"><strong>{selectedStudents.length}</strong> student(s) selected</div>
-          {enrollError && <Alert variant="danger" className="mt-2">{enrollError}</Alert>}
+          <div className="selected-summary">
+            <strong>{selectedStudents.length}</strong> student(s) selected
+          </div>
+          {enrollError && (
+            <Alert variant="danger" className="mt-2">
+              {enrollError}
+            </Alert>
+          )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={handleBackToCourseSelection}><FontAwesomeIcon icon={faTimes} /> Back</Button>
-          <Button variant="secondary" onClick={handleCloseEnrollModal}>Cancel</Button>
-          <Button variant="success" onClick={handleConfirmEnrollment} disabled={selectedStudents.length === 0 || loading}>
-            {loading ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faCheck} />} Enroll Selected ({selectedStudents.length})
+          <Button variant="secondary" onClick={handleBackToCourseSelection}>
+            <FontAwesomeIcon icon={faTimes} /> Back
+          </Button>
+          <Button variant="secondary" onClick={handleCloseEnrollModal}>
+            Cancel
+          </Button>
+          <Button
+            variant="success"
+            onClick={handleConfirmEnrollment}
+            disabled={selectedStudents.length === 0 || loading}
+          >
+            {loading ? (
+              <FontAwesomeIcon icon={faSpinner} spin />
+            ) : (
+              <FontAwesomeIcon icon={faCheck} />
+            )}{" "}
+            Enroll Selected ({selectedStudents.length})
           </Button>
         </Modal.Footer>
       </Modal>

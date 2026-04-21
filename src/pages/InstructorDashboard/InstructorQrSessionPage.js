@@ -3,9 +3,11 @@ import Container from "react-bootstrap/Container";
 import QrCodePanel from "../../components/instructor/QrCodePanel";
 import InstructorPageHero from "../../components/instructor/InstructorPageHero";
 import { useInstructorWorkspace } from "../../context/InstructorWorkspaceContext";
-import { useRealtimePolling } from "../../hooks/useRealtimePolling";
 import "../Dashboard/Dashboard.css";
 import "./InstructorDashboard.css";
+
+const QR_REFRESH_MARGIN_MS = 2000;
+const QR_FALLBACK_REFRESH_MS = 30000;
 
 function InstructorQrSessionPage() {
   const {
@@ -33,15 +35,29 @@ function InstructorQrSessionPage() {
     }
   }, [selectedQrSessionId, loadQrDetails]);
 
-  useRealtimePolling(
-    () => {
-      if (selectedQrSessionId) {
-        loadQrDetails(selectedQrSessionId);
+  useEffect(() => {
+    if (!selectedQrSessionId) {
+      return undefined;
+    }
+
+    let refreshDelayMs = QR_FALLBACK_REFRESH_MS;
+    const expiresAt = qrDetails?.qrExpiresAt;
+    if (expiresAt) {
+      const expiresAtMs = new Date(expiresAt).getTime();
+      if (!Number.isNaN(expiresAtMs)) {
+        refreshDelayMs = Math.max(
+          1000,
+          expiresAtMs - Date.now() - QR_REFRESH_MARGIN_MS,
+        );
       }
-    },
-    5000,
-    Boolean(selectedQrSessionId),
-  );
+    }
+
+    const timerId = setTimeout(() => {
+      loadQrDetails(selectedQrSessionId);
+    }, refreshDelayMs);
+
+    return () => clearTimeout(timerId);
+  }, [selectedQrSessionId, qrDetails?.qrExpiresAt, loadQrDetails]);
 
   const selectedQrSession =
     qrData.items.find((item) => item.id === selectedQrSessionId) || null;

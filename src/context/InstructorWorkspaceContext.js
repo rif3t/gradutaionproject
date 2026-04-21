@@ -284,7 +284,7 @@ export function InstructorWorkspaceProvider({ children }) {
   );
 
   const runCourseAction = useCallback(
-    async (action, courseId) => {
+    async (action, courseId, actionOptions = {}) => {
       const targetCourseId = courseId || selectedCourseId;
       if (!targetCourseId) {
         return;
@@ -292,50 +292,93 @@ export function InstructorWorkspaceProvider({ children }) {
 
       const actionKey = `course-${targetCourseId}-${action}`;
 
+      const resolveLectureId = async () => {
+        if (actionOptions.lectureId) {
+          return String(actionOptions.lectureId);
+        }
+
+        const sessionsResponse = await instructorDashboardApi.getCourseSessions(
+          targetCourseId,
+          {
+            page: 1,
+            limit: 20,
+          },
+        );
+        const sessionsList = Array.isArray(sessionsResponse?.items)
+          ? sessionsResponse.items
+          : [];
+
+        const preferredSession =
+          sessionsList.find((item) => item.status === "scheduled") ||
+          sessionsList.find((item) => item.status === "live") ||
+          sessionsList.find((item) => item.status === "completed") ||
+          sessionsList[0];
+
+        return preferredSession ? String(preferredSession.id) : "";
+      };
+
+      if (action === "edit") {
+        await runAction(
+          actionKey,
+          async () => ({ ok: true }),
+          "Edit course is not available for instructor role.",
+        );
+        return;
+      }
+
       if (action === "delete") {
         await runAction(
           actionKey,
-          () => instructorDashboardApi.deleteCourse(targetCourseId),
-          "Course deleted successfully.",
+          async () => ({ ok: true }),
+          "Delete course is not available for instructor role.",
         );
-      } else if (action === "edit") {
-        await runAction(
-          actionKey,
-          () =>
-            instructorDashboardApi.updateCourse(
-              targetCourseId,
-              {
-                status: "Active",
-              },
-              true,
-            ),
-          "Course updated successfully.",
-        );
-      } else if (action === "add-student") {
-        await runAction(
-          actionKey,
-          () =>
-            instructorDashboardApi.liveAction("course-students", "check-in", {
-              courseId: targetCourseId,
-            }),
-          "Student action submitted.",
-        );
-      } else if (action === "create-session") {
-        await runAction(
-          actionKey,
-          () =>
-            instructorDashboardApi.sessionAction("new", "start", {
-              courseId: targetCourseId,
-            }),
-          "Session creation started.",
-        );
+        return;
+      }
+
+      if (["create-session", "quick-start", "start"].includes(action)) {
+        const lectureId = await resolveLectureId();
+        if (!lectureId) {
+          await runAction(
+            actionKey,
+            async () => {
+              throw new Error("No lecture found for this course yet.");
+            },
+            "",
+          );
+        } else {
+          await runAction(
+            actionKey,
+            () =>
+              instructorDashboardApi.sessionAction(lectureId, "start", {
+                durationInMinutes: actionOptions.durationInMinutes || 60,
+              }),
+            "Session started successfully.",
+          );
+        }
+      } else if (["reopen-session", "reopen"].includes(action)) {
+        const lectureId = await resolveLectureId();
+        if (!lectureId) {
+          await runAction(
+            actionKey,
+            async () => {
+              throw new Error("No lecture found for this course yet.");
+            },
+            "",
+          );
+        } else {
+          await runAction(
+            actionKey,
+            () =>
+              instructorDashboardApi.qrAction(lectureId, "regenerate", {
+                durationInMinutes: actionOptions.durationInMinutes || 60,
+              }),
+            "Session reopened successfully.",
+          );
+        }
       } else {
         await runAction(
           actionKey,
-          () =>
-            instructorDashboardApi.sessionAction("new", "start", {
-              courseId: targetCourseId,
-            }),
+          async () => ({ ok: true }),
           "Course action completed.",
         );
       }

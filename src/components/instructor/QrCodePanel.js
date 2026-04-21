@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from "react";
 import Card from "react-bootstrap/Card";
 import Badge from "react-bootstrap/Badge";
 import Form from "react-bootstrap/Form";
@@ -22,6 +23,13 @@ const buildQrUrl = (payload) => {
   return `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${value}`;
 };
 
+const formatCountdown = (seconds) => {
+  const safeSeconds = Math.max(0, Number(seconds) || 0);
+  const mins = Math.floor(safeSeconds / 60);
+  const secs = safeSeconds % 60;
+  return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+};
+
 function QrCodePanel({
   query,
   qrSessions,
@@ -35,9 +43,42 @@ function QrCodePanel({
   onSelectSession,
   onQrAction,
 }) {
+  const [nowMs, setNowMs] = useState(Date.now());
+
+  useEffect(() => {
+    const timerId = setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
+
+    return () => clearInterval(timerId);
+  }, []);
+
   const payload =
     qrDetails?.code?.value || selectedQrSession?.id || "FCAI-ATTENDANCE";
   const imageUrl = qrDetails?.image?.url || buildQrUrl(payload);
+  const qrStatus =
+    qrDetails?.sessionStatus ||
+    qrDetails?.code?.status ||
+    selectedQrSession?.status ||
+    "unknown";
+
+  const { countdownLabel, isExpired } = useMemo(() => {
+    const expiresAt = qrDetails?.qrExpiresAt || qrDetails?.code?.expiresAt;
+    if (!expiresAt) {
+      return { countdownLabel: "--:--", isExpired: false };
+    }
+
+    const expiresAtMs = new Date(expiresAt).getTime();
+    if (Number.isNaN(expiresAtMs)) {
+      return { countdownLabel: "--:--", isExpired: false };
+    }
+
+    const secondsLeft = Math.max(0, Math.ceil((expiresAtMs - nowMs) / 1000));
+    return {
+      countdownLabel: formatCountdown(secondsLeft),
+      isExpired: secondsLeft <= 0,
+    };
+  }, [nowMs, qrDetails?.qrExpiresAt, qrDetails?.code?.expiresAt]);
 
   return (
     <div className="stack-section" id="qr-section">
@@ -225,8 +266,12 @@ function QrCodePanel({
                     <FontAwesomeIcon icon={faQrcode} /> Session ID:{" "}
                     {selectedQrSession?.id}
                   </Badge>
+                  <p className="qr-note mb-0">Status: {qrStatus}</p>
+                  <p className="qr-note mb-0">Expires in: {countdownLabel}</p>
                   <p className="qr-note mb-0">
-                    Status: {selectedQrSession?.status}
+                    {isExpired
+                      ? "QR expired, refreshing..."
+                      : "Auto refresh is scheduled before expiry."}
                   </p>
                 </div>
               </div>
