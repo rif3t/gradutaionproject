@@ -5,19 +5,30 @@ import {
   faBell,
   faMagnifyingGlass,
   faCaretDown,
+  faBars,
 } from "@fortawesome/free-solid-svg-icons";
 import "../Navbar/Navbar.css";
 
-function TopNavbar2() {
+function TopNavbar2({ onToggleSidebar }) {
   const fullName = localStorage.getItem("adminName") || "Instructor";
   const avatarLetter = fullName.charAt(0).toUpperCase();
 
   return (
-    <Navbar expand="lg" className="top-navbar-shell">
+    <Navbar expand="lg" className="top-navbar-shell" fixed="top">
       <Container fluid className="top-navbar-inner">
-        <Navbar.Brand className="top-navbar-title">
-          FCAI Attendance Instructor
-        </Navbar.Brand>
+        <div className="top-navbar-left">
+          <button 
+            type="button" 
+            className="top-toggle-btn" 
+            onClick={onToggleSidebar}
+            aria-label="Toggle Sidebar"
+          >
+            <FontAwesomeIcon icon={faBars} />
+          </button>
+          <Navbar.Brand className="top-navbar-title">
+            FCAI Instructor
+          </Navbar.Brand>
+        </div>
 
         <div className="top-navbar-actions">
           <button type="button" className="top-icon-btn" aria-label="Search">

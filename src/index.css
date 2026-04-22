@@ -84,3 +84,23 @@ code {
     padding-right: 14px;
   }
 }
+
+/* Global Table Responsiveness Helper */
+.table-responsive-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
+}
+
+.table-responsive-wrapper table {
+  min-width: 700px; /* Minimum width for tables to prevent squashing */
+}
+
+@media (max-width: 600px) {
+  .idb-btn-small {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+}

@@ -68,7 +68,8 @@
   border-radius: var(--ic-radius);
   border: 1px solid var(--ic-border);
   box-shadow: var(--ic-shadow-card);
-  flex-wrap: wrap;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
 .ic-bc-step {
@@ -2449,6 +2450,16 @@
   align-items: center;
 }
 
+@media (max-width: 768px) {
+  .idb-as-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  .idb-as-stats {
+    justify-content: center;
+  }
+}
+
 .idb-as-qr-wrap {
   background: #fff;
   padding: 12px;
@@ -2822,6 +2833,36 @@
   padding: 2rem;
   text-align: center;
   color: var(--ic-text-muted);
+}
+
+/* ─── Global Layout ────────────────────────────────────── */
+.layout-root {
+  display: flex;
+  min-height: 100vh;
+  background: var(--ic-bg);
+}
+
+.main-viewport {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; 
+  position: relative;
+}
+
+.content-area {
+  flex: 1;
+  padding: 0;
+  overflow-x: hidden;
+  transition: margin-left 0.3s ease;
+}
+
+@media (max-width: 991px) {
+  .content-area {
+    margin-left: 0;
+    padding-top: 20px;
+  }
+  .idb-container { padding: 0 15px; }
 }
 
 

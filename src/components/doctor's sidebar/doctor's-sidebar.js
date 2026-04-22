@@ -10,7 +10,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import logoImage from "../../assets/images/logo.png";
 import "./sidebar2.css";
 
-function Sidebar2() {
+function Sidebar2({ isOpen, onClose }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -32,14 +32,20 @@ function Sidebar2() {
   ];
 
   return (
-    <aside className="sidebar-shell">
+    <aside className={`sidebar-shell ${isOpen ? "mobile-open" : ""}`}>
       <div className="sidebar-brand">
-        <h1>FCAI</h1>
-        <img
-          src={logoImage}
-          alt="FCAI University Logo"
-          className="sidebar-university-logo"
-        />
+        <div className="sidebar-brand-content">
+          <h1>FCAI</h1>
+          <img
+            src={logoImage}
+            alt="FCAI University Logo"
+            className="sidebar-university-logo"
+          />
+        </div>
+        {/* Mobile Close Button */}
+        <button className="sidebar-mobile-close" onClick={onClose}>
+          &times;
+        </button>
       </div>
 
       <nav className="sidebar-nav">

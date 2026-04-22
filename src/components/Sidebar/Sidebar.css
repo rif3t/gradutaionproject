@@ -204,6 +204,23 @@
   }
 }
 
+.sidebar-mobile-close {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--sidebar-active-text);
+  font-size: 32px;
+  line-height: 1;
+  padding: 0 10px;
+  cursor: pointer;
+}
+
+@media (max-width: 991px) {
+  .sidebar-mobile-close {
+    display: block;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sidebar-shell,
   .sidebar-brand h1,
@@ -215,59 +232,76 @@
   }
 }
 
-@media (max-width: 992px) {
+@media (max-width: 991px) {
   :root {
-    --sidebar-width: 178px;
+    --sidebar-width: 0px; /* Hide by default on mobile */
   }
 
-  .sidebar-item {
-    font-size: 15px;
+  .sidebar-shell {
+    transform: translateX(-100%);
+    width: 260px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .sidebar-shell.mobile-open {
+    transform: translateX(0);
+    --sidebar-width: 260px;
+  }
+  
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
+    z-index: 1050;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  .sidebar-overlay.active {
+    display: block;
   }
 }
 
-@media (max-width: 768px) {
-  :root {
-    --sidebar-width: 90px;
-  }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
-  .sidebar-brand {
-    padding: 0;
-    justify-content: center;
-    gap: 6px;
+@media (min-width: 992px) {
+  .sidebar-shell {
+    transform: translateX(0) !important;
   }
+}
 
-  .sidebar-brand h1 {
-    font-size: 26px;
+.main-viewport {
+  margin-left: var(--sidebar-width);
+  transition: margin-left 0.3s ease;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 991px) {
+  .main-viewport {
+    margin-left: 0 !important;
   }
+}
 
-  .sidebar-university-logo {
-    height: 28px;
-  }
+/* Global Content Wrapper fix - Remove redundant margin */
+.idb-container, .dashcontent, .admin-dashboard {
+  transition: margin-left 0.3s ease;
+  width: auto;
+  min-height: 100vh;
+}
 
-  .sidebar-nav {
-    padding: 12px 6px;
-    gap: 8px;
-  }
-
-  .sidebar-item {
-    justify-content: center;
-    padding: 0;
-    gap: 0;
-  }
-
-  .sidebar-item span,
-  .sidebar-logout span {
-    display: none;
-  }
-
-  .sidebar-item-active {
-    border-left-width: 2px;
-    padding-left: 0;
-  }
-
-  .sidebar-logout {
-    justify-content: center;
-    padding: 0;
-    gap: 0;
+@media (max-width: 991px) {
+  .idb-container, .dashcontent, .admin-dashboard {
+    margin-left: 0;
+    padding-top: 70px; /* Space for fixed navbar */
   }
 }

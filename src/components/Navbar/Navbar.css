@@ -167,38 +167,56 @@
   }
 }
 
-@media (max-width: 992px) {
-  .top-navbar-inner {
-    padding: 0 16px;
-  }
-
-  .top-navbar-title {
-    font-size: 18px;
-  }
-
-  .profile-name {
-    font-size: 13px;
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .top-navbar-shell {
+    left: 0;
+    width: 100%;
     height: 64px;
+    z-index: 1060;
   }
 
   .top-navbar-title {
-    font-size: 15px;
-    max-width: 155px;
+    font-size: 1.1rem;
+    max-width: 160px;
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   .profile-name {
     display: none;
   }
+}
+
+.top-navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.top-toggle-btn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: none;
+  background: var(--ic-surface);
+  color: var(--ic-primary);
+  font-size: 1.2rem;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.1);
+}
+
+@media (max-width: 991px) {
+  .top-toggle-btn {
+    display: flex;
+  }
+}
+
+.top-toggle-btn:hover {
+  background: var(--ic-primary-light);
+  transform: scale(1.05);
 }
