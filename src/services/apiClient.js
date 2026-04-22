@@ -19,12 +19,44 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear token and other auth data
+      localStorage.removeItem("token");
+      localStorage.removeItem("adminRole");
+      localStorage.removeItem("adminName");
+      
+      // Redirect to login (using window.location because we are outside React component)
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const getApiErrorMessage = (error, fallbackMessage) => {
+  const data = error?.response?.data;
+
+  // Handle ASP.NET Core Validation Errors (errors object)
+  if (data?.errors && typeof data.errors === "object") {
+    const errorMessages = Object.values(data.errors)
+      .flat()
+      .filter((msg) => typeof msg === "string");
+    
+    if (errorMessages.length > 0) {
+      return errorMessages.join(" • ");
+    }
+  }
+
   return (
-    error?.response?.data?.message ||
-    error?.response?.data?.title ||
+    data?.message ||
+    data?.title ||
     error?.message ||
-    fallbackMessage
+    fallbackMessage ||
+    "An unexpected error occurred."
   );
 };
 

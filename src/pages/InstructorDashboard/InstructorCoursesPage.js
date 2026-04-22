@@ -20,6 +20,7 @@ function InstructorCoursesPage() {
     loadCourseDetails,
     setSelectedCourseId,
     runCourseAction,
+    handleLectureAction,
   } = useInstructorWorkspace();
 
   const studentsSearchRef = useRef("");
@@ -87,6 +88,13 @@ function InstructorCoursesPage() {
     [runCourseAction],
   );
 
+  const handleLectureActionUI = useCallback(
+    async (action, data) => {
+      await handleLectureAction(action, data);
+    },
+    [handleLectureAction],
+  );
+
   return (
     <div className="dashcontent admin-dashboard instructor-dashboard-page">
       <Container fluid>
@@ -112,6 +120,7 @@ function InstructorCoursesPage() {
             onStudentsSearch={handleStudentsSearch}
             onSessionFilter={handleSessionFilter}
             onCourseAction={handleCourseAction}
+            onLectureAction={handleLectureActionUI}
           />
         </div>
       </Container>

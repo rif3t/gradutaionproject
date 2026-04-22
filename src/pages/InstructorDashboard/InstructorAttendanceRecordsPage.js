@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Container from "react-bootstrap/Container";
 import AttendanceRecordsTable from "../../components/instructor/AttendanceRecordsTable";
 import InstructorPageHero from "../../components/instructor/InstructorPageHero";
@@ -19,8 +20,14 @@ function InstructorAttendanceRecordsPage() {
     exportAttendance,
   } = useInstructorWorkspace();
 
+  const location = useLocation();
+
   useEffect(() => {
-    loadAttendanceRecords();
+    const initialState = {};
+    if (location.state?.courseId) initialState.courseId = location.state.courseId;
+    if (location.state?.sessionId) initialState.sessionId = location.state.sessionId;
+    
+    loadAttendanceRecords(initialState);
     // Initial load only to avoid callback-identity loops.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

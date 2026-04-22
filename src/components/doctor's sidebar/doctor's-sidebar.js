@@ -3,9 +3,7 @@ import {
   faGauge,
   faBookOpen,
   faQrcode,
-  faChartLine,
   faAddressCard,
-  faRotate,
   faRightFromBracket,
 } from "@fortawesome/free-solid-svg-icons";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -26,14 +24,11 @@ function Sidebar2() {
   const navItems = [
     { label: "Dashboard", icon: faGauge, to: "/instructor-dashboard" },
     { label: "My Courses", icon: faBookOpen, to: "/instructor-courses" },
-    { label: "QR Session", icon: faQrcode, to: "/instructor-qr-session" },
-    { label: "Live Monitor", icon: faChartLine, to: "/instructor-live-monitor" },
     {
       label: "Attendance Records",
       icon: faAddressCard,
       to: "/instructor-attendance-records",
     },
-    { label: "Session Control", icon: faRotate, to: "/instructor-session-control" },
   ];
 
   return (

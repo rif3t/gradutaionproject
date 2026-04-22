@@ -12,9 +12,7 @@ import ReportsPage from "./pages/Reports/Reports";
 import InstructorDashboard from "./pages/InstructorDashboard/InstructorDashboard";
 import InstructorCoursesPage from "./pages/InstructorDashboard/InstructorCoursesPage";
 import InstructorQrSessionPage from "./pages/InstructorDashboard/InstructorQrSessionPage";
-import InstructorLiveMonitorPage from "./pages/InstructorDashboard/InstructorLiveMonitorPage";
 import InstructorAttendanceRecordsPage from "./pages/InstructorDashboard/InstructorAttendanceRecordsPage";
-import InstructorSessionControlPage from "./pages/InstructorDashboard/InstructorSessionControlPage";
 import DoctorsLayout from "./layouts/doctor'slayout";
 import { ProtectedRoute } from "./routes/roleBasedRoutes";
 
@@ -106,22 +104,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/instructor-qr-session"
-          element={
-            <ProtectedRoute allowedRoles={["instructor"]}>
-              <InstructorQrSessionPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/instructor-live-monitor"
-          element={
-            <ProtectedRoute allowedRoles={["instructor"]}>
-              <InstructorLiveMonitorPage />
-            </ProtectedRoute>
-          }
-        />
+        {/* QR Session integrated into Courses drill-down */}
         <Route
           path="/instructor-attendance-records"
           element={
@@ -130,14 +113,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/instructor-session-control"
-          element={
-            <ProtectedRoute allowedRoles={["instructor"]}>
-              <InstructorSessionControlPage />
-            </ProtectedRoute>
-          }
-        />
+
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
