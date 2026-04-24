@@ -7,7 +7,7 @@ function InstructorPageHero({ title, subtitle, kicker = "Instructor Attendance H
         <p className="dash-subtext">{subtitle}</p>
       </div>
       <div className="dash-hero-pulse" aria-hidden="true">
-        <span />  
+        <span />   
         <span />
         <span />
       </div>
