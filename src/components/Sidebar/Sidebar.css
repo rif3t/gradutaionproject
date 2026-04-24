@@ -248,23 +248,25 @@
     transform: translateX(0);
     --sidebar-width: 260px;
   }
-  
-  .sidebar-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(4px);
-    z-index: 1050;
-    display: none;
-    animation: fadeIn 0.3s ease;
-  }
-  
-  .sidebar-overlay.active {
-    display: block;
-  }
+}
+
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 15, 30, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 1050;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+  display: block;
+  opacity: 1;
 }
 
 @keyframes fadeIn {

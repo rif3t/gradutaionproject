@@ -873,6 +873,17 @@
   min-height: 500px;
 }
 
+@media (max-width: 900px) {
+  .ic-session-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .ic-qr-zone {
+    border-right: none;
+    border-bottom: 1px solid var(--ic-border);
+  }
+}
+
 /* QR Zone */
 .ic-qr-zone {
   padding: 28px 24px;
@@ -1041,6 +1052,12 @@
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   padding: 14px;
+}
+
+@media (max-width: 500px) {
+  .ic-settings-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Session Action Buttons */
@@ -2580,12 +2597,15 @@
 }
 
 @media (max-width: 600px) {
-  .idb-as-content { flex-direction: column; align-items: flex-start; text-align: center; }
+  .idb-active-session { padding: 1rem; }
+  .idb-as-content { flex-direction: column; align-items: stretch; text-align: center; gap: 16px; }
   .idb-as-content > * { width: 100%; justify-content: center; }
-  .idb-as-qr-wrap { margin: 0 auto; }
-  .idb-as-badge { justify-content: center; }
-  .idb-as-stats { justify-content: center; }
-  .idb-as-actions { justify-content: center; }
+  .idb-as-qr-wrap { margin: 0 auto; width: 160px; height: 160px; }
+  .idb-as-qr-image { width: 100%; height: 100%; }
+  .idb-as-badge { justify-content: center; width: fit-content; margin: 0 auto 12px; }
+  .idb-as-stats { justify-content: space-around; gap: 10px; }
+  .idb-as-actions { flex-direction: column; gap: 8px; }
+  .idb-as-btn { justify-content: center; width: 100%; }
 }
 
 /* ─── Courses Overview (Horizontal / Grid) ──────────────── */
@@ -2859,10 +2879,39 @@
 
 @media (max-width: 991px) {
   .content-area {
-    margin-left: 0;
-    padding-top: 20px;
+    margin-left: 0 !important;
+    padding-top: 80px; /* More space for fixed navbar on mobile */
   }
-  .idb-container { padding: 0 15px; }
+  .idb-container { padding: 0 12px 30px; }
+  
+  .idb-layout {
+    gap: 16px;
+    margin-top: 16px;
+  }
+  
+  .idb-section-header {
+    padding: 1rem;
+  }
+  
+  .idb-section-body {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .idb-courses-list {
+    flex-direction: column;
+    overflow-x: visible;
+  }
+  
+  .idb-course-card {
+    min-width: 0;
+    width: 100%;
+  }
+  
+  .idb-quick-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 
