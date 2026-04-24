@@ -33,7 +33,7 @@ function InstructorDashboard() {
     coursesState,
     loadCourses,
     executeQrAction,
-    onCourseAction,
+    runCourseAction: onCourseAction,
     actionState,
     clearActionFeedback
   } = useInstructorWorkspace();
@@ -77,63 +77,6 @@ function InstructorDashboard() {
           <div className="idb-main-stack">
             
             {/* 1. Active Session Widget (Conditionally shown) */}
-            {activeSession ? (
-              <div className="idb-section idb-active-session">
-                <div className="idb-section-body">
-                  <div className="idb-as-content">
-                    <div className="idb-as-qr-wrap">
-                      <img 
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(activeSession.id)}`} 
-                        alt="Session QR" 
-                        className="idb-as-qr-image"
-                      />
-                    </div>
-                    <div className="idb-as-info">
-                      <div className="idb-as-badge">
-                        <div className="idb-as-dot"></div>
-                        Active Attendance Session
-                      </div>
-                      <h2 className="idb-as-title">{activeSession.title}</h2>
-                      <p className="idb-as-course">{activeSession.courseName || "Your Course"}</p>
-                      
-                      <div className="idb-as-stats">
-                        <div className="idb-as-stat-item">
-                          <span className="idb-as-stat-label">Attended</span>
-                          <span className="idb-as-stat-value">{activeSession.presentCount || 0}</span>
-                        </div>
-                        <div className="idb-as-stat-item">
-                          <span className="idb-as-stat-label">Ends At</span>
-                          <span className="idb-as-stat-value">--:--</span>
-                        </div>
-                      </div>
-
-                      <div className="idb-as-actions">
-                        <button 
-                          className="idb-as-btn primary"
-                          onClick={() => navigate("/instructor-attendance-records", { 
-                            state: { courseId: activeSession.courseId, sessionId: activeSession.id } 
-                          })}
-                        >
-                          <FontAwesomeIcon icon={faEye} /> View Live Table
-                        </button>
-                        <button 
-                          className="idb-as-btn outline"
-                          onClick={() => {
-                            if (window.confirm("End this attendance session?")) {
-                              onCourseAction("end-session", activeSession.courseId, { lectureId: activeSession.id });
-                            }
-                          }}
-                          disabled={actionState.busy === `course-${activeSession.courseId}-end-session`}
-                        >
-                          <FontAwesomeIcon icon={faStopCircle} /> 
-                          {actionState.busy === `course-${activeSession.courseId}-end-session` ? "Ending..." : "End Session"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : null}
 
             {/* 2. Courses Overview (Cards) */}
             <div className="idb-section">

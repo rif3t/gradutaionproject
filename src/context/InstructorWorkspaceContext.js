@@ -371,6 +371,24 @@ export function InstructorWorkspaceProvider({ children }) {
         return;
       }
 
+      // 1. Block starting a new session if another is already live (Only one active session allowed)
+      if (["create-session", "quick-start", "start", "reopen-session", "reopen"].includes(action)) {
+        const { sessions: allLive } = await instructorDashboardApi.getLiveOverview();
+        const active = (allLive || []).find(s => s.status === "live");
+        
+        if (active) {
+          const lectureId = await resolveLectureId();
+          if (String(active.id) !== String(lectureId)) {
+            setActionState({
+              busy: "",
+              error: `Action Blocked: Another session is already live ("${active.title}"). Please end it before starting a new one.`,
+              success: "",
+            });
+            return;
+          }
+        }
+      }
+
       if (["create-session", "quick-start", "start"].includes(action)) {
         const lectureId = await resolveLectureId();
         if (!lectureId) {
@@ -479,6 +497,21 @@ export function InstructorWorkspaceProvider({ children }) {
       const targetId = qrSessionId || selectedQrSessionId;
       if (!targetId) {
         return;
+      }
+
+      // Check for active sessions globally
+      if (action === "regenerate") {
+        const { sessions: allLive } = await instructorDashboardApi.getLiveOverview();
+        const active = (allLive || []).find(s => s.status === "live");
+
+        if (active && String(active.id) !== String(targetId)) {
+          setActionState({
+            busy: "",
+            error: `Action Blocked: Another session is already live ("${active.title}"). Please end it before starting a new one.`,
+            success: "",
+          });
+          return;
+        }
       }
 
       await runAction(
@@ -701,6 +734,21 @@ export function InstructorWorkspaceProvider({ children }) {
       const sessionId = sessionControlData.selectedSessionId;
       if (!sessionId) {
         return;
+      }
+
+      // Check for active sessions globally
+      if (["start", "reopen"].includes(action)) {
+        const { sessions: allLive } = await instructorDashboardApi.getLiveOverview();
+        const active = (allLive || []).find(s => s.status === "live");
+
+        if (active && String(active.id) !== String(sessionId)) {
+          setActionState({
+            busy: "",
+            error: `Action Blocked: Another session is already live ("${active.title}"). Please end it before starting a new one.`,
+            success: "",
+          });
+          return;
+        }
       }
 
       await runAction(

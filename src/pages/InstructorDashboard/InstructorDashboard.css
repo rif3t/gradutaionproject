@@ -930,8 +930,8 @@
 }
 
 .ic-qr-img.dimmed {
-  filter: blur(3px) grayscale(0.6);
-  opacity: 0.55;
+  filter: blur(8px) grayscale(0.8);
+  opacity: 0.4;
 }
 
 .ic-qr-img.pulse {
@@ -951,9 +951,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  background: rgba(240, 244, 255, 0.75);
-  backdrop-filter: blur(2px);
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(4px);
   color: var(--ic-primary);
   font-size: 0.88rem;
   font-weight: 600;
@@ -1099,6 +1099,8 @@
 }
 
 .ic-reopen-btn {
+  flex: 1;
+  min-width: 140px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1125,6 +1127,8 @@
 }
 
 .ic-end-btn {
+  flex: 1;
+  min-width: 140px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1152,6 +1156,8 @@
 }
 
 .ic-edit-btn {
+  flex: 1;
+  min-width: 140px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

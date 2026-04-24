@@ -591,7 +591,6 @@ function ARAttendanceStep({
                     >
                       Check-in <SortIcon field="time" />
                     </th>
-                    <th className="ar-th-actions">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -623,26 +622,6 @@ function ARAttendanceStep({
                       <td>
                         <span className="ar-time-val">{record.time || "—"}</span>
                       </td>
-                      <td>
-                        <div className="ar-row-actions">
-                          <button
-                            className="ar-action-btn approve"
-                            onClick={() => onReview(record.id, "approve")}
-                            title="Approve"
-                            id={`ar-approve-${record.id}`}
-                          >
-                            <FontAwesomeIcon icon={faCircleCheck} />
-                          </button>
-                          <button
-                            className="ar-action-btn reject"
-                            onClick={() => onReview(record.id, "reject")}
-                            title="Reject"
-                            id={`ar-reject-${record.id}`}
-                          >
-                            <FontAwesomeIcon icon={faCircleXmark} />
-                          </button>
-                        </div>
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -650,29 +629,6 @@ function ARAttendanceStep({
             </div>
 
             <div className="ar-table-footer">
-              <div className="ar-bulk-group">
-                <button
-                  className="ar-bulk-btn"
-                  onClick={() => onBulkAction("post")}
-                  id="ar-bulk-add"
-                >
-                  Bulk Add
-                </button>
-                <button
-                  className="ar-bulk-btn"
-                  onClick={() => onBulkAction("patch")}
-                  id="ar-bulk-update"
-                >
-                  Bulk Update
-                </button>
-                <button
-                  className="ar-bulk-btn danger"
-                  onClick={() => onBulkAction("delete")}
-                  id="ar-bulk-delete"
-                >
-                  Bulk Delete
-                </button>
-              </div>
               <DataPagination meta={meta} onPageChange={onPageChange} />
             </div>
           </>
@@ -716,6 +672,9 @@ function AttendanceRecordsTable({
   const [lecLoading,     setLecLoading]     = useState(false);
   const [lecError,       setLecError]       = useState("");
   const [selectedLecture,setSelectedLecture]= useState(null);
+  const [reportData, setReportData] = useState(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError] = useState("");
 
   // Load courses once
   useEffect(() => {
@@ -743,10 +702,22 @@ function AttendanceRecordsTable({
   }, []);
 
   const handleSelectLecture = useCallback(
-    (lecture) => {
+    async (lecture) => {
       setSelectedLecture(lecture);
       setStep(3);
-      // Trigger attendance load filtered by courseId + sessionId
+      setReportLoading(true);
+      setReportError("");
+      
+      try {
+        const report = await instructorDashboardApi.getAttendanceReport(lecture.id);
+        setReportData(report);
+      } catch (err) {
+        setReportError(err.message || "Failed to load attendance report.");
+      } finally {
+        setReportLoading(false);
+      }
+
+      // Keep calling onFilterChange for any other side effects or filters if needed
       onFilterChange({
         courseId: selectedCourse?.id || "",
         sessionId: lecture.id,
@@ -765,6 +736,7 @@ function AttendanceRecordsTable({
   const handleBackToLectures = () => {
     setStep(2);
     setSelectedLecture(null);
+    setReportData(null);
   };
 
   return (
@@ -806,11 +778,25 @@ function AttendanceRecordsTable({
         <div className={`ar-step-pane${step === 3 ? " visible" : ""}`} aria-hidden={step !== 3}>
           {step === 3 && (
             <ARAttendanceStep
-              records={records}
-              summary={summary}
+              records={(reportData?.students || []).map((s, idx) => ({
+                id: `rep-${idx}`,
+                studentName: s.fullName,
+                studentId: s.departmentName || "N/A", // showing department as subtitle/id info
+                status: s.attendanceStatus,
+                date: reportData.lectureDate,
+                time: "-", // Report might not have scan time
+              }))}
+              summary={{
+                present: reportData?.presentCount || 0,
+                absent: reportData?.absentCount || 0,
+                late: (reportData?.students || []).filter(s => (s.attendanceStatus || "").toLowerCase() === "late").length,
+                attendanceRate: reportData?.totalEligibleStudents 
+                  ? Math.round((reportData.presentCount / reportData.totalEligibleStudents) * 100)
+                  : 0
+              }}
               query={query}
               meta={meta}
-              state={state}
+              state={{ loading: reportLoading, error: reportError || state.error }}
               actionState={actionState}
               course={selectedCourse}
               lecture={selectedLecture}

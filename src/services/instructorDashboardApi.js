@@ -1,22 +1,13 @@
-/**
- * instructorDashboardApi.js
- * ─────────────────────────────────────────────────────────────────────────────
- * ALL endpoints are wired to the real API as documented in swager.json.
- *
- * Swagger base-URL (set by apiClient):
- *   AttendanceSession  /api/lectures/{lectureId}/attendance-session/[start|reopen|close|qr|live]
- *   Authentication     /api/Authentication/Login
- *   Courses            /api/Courses  /api/Courses/{id}
- *   Enrollment         /api/courses/lookup  /api/courses/{courseId}/students  /api/courses/{courseId}/eligible-students
- *                      /api/courses/{courseId}/students/bulk  /api/courses/{courseId}/students/{studentId}
- *   Instructors        /api/Instructors  /api/Instructors/{id}  /api/Instructors/my-courses
- *   Lectures           /api/courses/{courseId}/lectures  (GET list + POST create)
- *   Students           /api/Students  /api/Students/{id}  /api/Students/me/profile
- */
+
 
 import apiClient, { getApiErrorMessage } from "./apiClient";
 
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+const buildQrUrl = (payload) => {
+  const value = encodeURIComponent(payload || "FCAI-ATTENDANCE");
+  return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${value}&bgcolor=ffffff&color=1a1a2e&qzone=2`;
+};
 
 const semesterLabels = { 1: "First", 2: "Second", 3: "Summer" };
 
@@ -515,6 +506,9 @@ export const instructorDashboardApi = {
       `/api/lectures/${lectureId}/attendance-session/start`,
       { durationInMinutes: toNumber(durationInMinutes, 60) },
     );
+    // Invalidate caches to force fresh data on next load
+    _lecturesCache.clear();
+    _coursesCache.at = 0;
     return res.data;
   },
 
@@ -526,6 +520,9 @@ export const instructorDashboardApi = {
       `/api/lectures/${lectureId}/attendance-session/reopen`,
       { durationInMinutes: toNumber(durationInMinutes, 60) },
     );
+    // Invalidate caches to force fresh data on next load
+    _lecturesCache.clear();
+    _coursesCache.at = 0;
     return res.data;
   },
 
@@ -534,6 +531,9 @@ export const instructorDashboardApi = {
    */
   async closeAttendanceSession(lectureId) {
     const res = await apiClient.post(`/api/lectures/${lectureId}/attendance-session/close`);
+    // Invalidate caches to force fresh data on next load
+    _lecturesCache.clear();
+    _coursesCache.at = 0;
     return res.data;
   },
 
@@ -541,9 +541,15 @@ export const instructorDashboardApi = {
    * GET /api/lectures/{lectureId}/attendance-session/qr → AttendanceSessionQrDto
    * { sessionStatus, qrPayload, qrExpiresAt }
    */
-  async getQrCode(lectureId) {
+  async getQrCodeData(lectureId) {
     const res = await apiClient.get(`/api/lectures/${lectureId}/attendance-session/qr`);
-    return res.data;
+    const qrData = res.data;
+    // The backend provides the payload directly
+    const payload = qrData?.qrPayload || `${lectureId}-${Date.now()}`;
+    return {
+      ...qrData,
+      qrUrl: buildQrUrl(payload),
+    };
   },
 
   /**
@@ -552,6 +558,14 @@ export const instructorDashboardApi = {
    */
   async getLiveStatus(lectureId) {
     const res = await apiClient.get(`/api/lectures/${lectureId}/attendance-session/live`);
+    return res.data;
+  },
+
+  /**
+   * GET /api/lectures/{lectureId}/attendance-report → LectureAttendanceReportDto
+   */
+  async getAttendanceReport(lectureId) {
+    const res = await apiClient.get(`/api/lectures/${lectureId}/attendance-report`);
     return res.data;
   },
 

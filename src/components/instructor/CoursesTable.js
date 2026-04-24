@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import Badge from "react-bootstrap/Badge";
 import Alert from "react-bootstrap/Alert";
 import Form from "react-bootstrap/Form";
@@ -30,6 +30,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import DataStateView from "./shared/DataStateView";
 import DataPagination from "./shared/DataPagination";
+import { instructorDashboardApi } from "../../services/instructorDashboardApi";
 
 const buildQrUrl = (payload) => {
   const value = encodeURIComponent(payload || "FCAI-ATTENDANCE");
@@ -518,7 +519,7 @@ function SessionQrPanel({
   qrRefreshSeconds,
   setQrRefreshSeconds,
   timeLeft,
-  qrImageUrl,
+  displayQrUrl,
   actionState,
   students,
   onStartSession,
@@ -571,7 +572,7 @@ function SessionQrPanel({
           <div className={`ic-qr-card${isLive ? " live" : ""}`} id="qr-code-display">
             <div className="ic-qr-inner">
               <img
-                src={qrImageUrl}
+                src={displayQrUrl}
                 alt="Attendance QR Code"
                 className={`ic-qr-img${isLive ? " pulse" : " dimmed"}`}
               />
@@ -646,30 +647,36 @@ function SessionQrPanel({
           <div className="ic-control-card" id="session-actions-card">
             <h4 className="ic-control-card-title">Session Control</h4>
             <div className="ic-session-action-btn-group">
-              <button
-                className="ic-start-btn"
-                onClick={() => onStartSession(lecture?.id)}
-                disabled={
-                  !lecture?.id ||
-                  actionState.busy === `course-${lecture?.courseId}-create-session`
-                }
-                id="start-session-btn"
-              >
-                <FontAwesomeIcon icon={faPlay} />
-                Start Session
-              </button>
-              <button
-                className="ic-reopen-btn"
-                onClick={() => onReopenSession(lecture?.id)}
-                disabled={
-                  !lecture?.id ||
-                  actionState.busy === `course-${lecture?.courseId}-reopen-session`
-                }
-                id="reopen-session-btn"
-              >
-                <FontAwesomeIcon icon={faRotateRight} />
-                Reopen
-              </button>
+              {lecture?.status === "scheduled" && (
+                <button
+                  className="ic-start-btn"
+                  onClick={() => onStartSession(lecture?.id)}
+                  disabled={
+                    !lecture?.id ||
+                    actionState.busy === `course-${lecture?.courseId}-create-session`
+                  }
+                  id="start-session-btn"
+                >
+                  <FontAwesomeIcon icon={faPlay} />
+                  Start Session
+                </button>
+              )}
+              
+              {lecture?.status === "completed" && (
+                <button
+                  className="ic-reopen-btn"
+                  onClick={() => onReopenSession(lecture?.id)}
+                  disabled={
+                    !lecture?.id ||
+                    actionState.busy === `course-${lecture?.courseId}-reopen-session`
+                  }
+                  id="reopen-session-btn"
+                >
+                  <FontAwesomeIcon icon={faRotateRight} />
+                  Reopen Session
+                </button>
+              )}
+
               {isLive && (
                 <button
                   className="ic-end-btn"
@@ -684,6 +691,7 @@ function SessionQrPanel({
                   End Session
                 </button>
               )}
+              
               <button
                 className="ic-edit-btn"
                 onClick={() => onEditLecture(lecture)}
@@ -821,7 +829,7 @@ function CoursesTable({
   const [sessionDuration, setSessionDuration] = useState(60);
   const [qrRefreshSeconds, setQrRefreshSeconds] = useState(15);
   const [timeLeft, setTimeLeft] = useState(15);
-  const [qrSeed, setQrSeed] = useState(Date.now());
+  const [qrImageUrl, setQrImageUrl] = useState("");
   const [lectureSearch, setLectureSearch] = useState("");
   const [lectureFilter, setLectureFilter] = useState("");
   const [lectureForm, setLectureForm] = useState({
@@ -862,8 +870,21 @@ function CoursesTable({
     [filteredLectures, selectedLectureId],
   );
 
-  const qrPayload = `${selectedLecture?.id || selectedCourseId || "SESSION"}-${qrSeed}`;
-  const qrImageUrl = buildQrUrl(qrPayload);
+  const fetchQrData = useCallback(async (lectureId) => {
+    if (!lectureId) return;
+    try {
+      const data = await instructorDashboardApi.getQrCodeData(lectureId);
+      if (data?.qrUrl) {
+        setQrImageUrl(data.qrUrl);
+      }
+    } catch (error) {
+      console.error("QR Refresh failed:", error);
+    }
+  }, []);
+
+  const qrPayload = selectedLecture?.id || selectedCourseId || "SESSION";
+  // The primary qrImageUrl now comes from state, but we fall back to a local one if empty
+  const displayQrUrl = qrImageUrl || buildQrUrl(qrPayload);
 
   // Auto-select first lecture
   useEffect(() => {
@@ -879,22 +900,25 @@ function CoursesTable({
       return;
     }
 
-    // Refresh interval
-    const refreshTimer = setInterval(() => {
-      setQrSeed(Date.now());
-      setTimeLeft(qrRefreshSeconds);
-    }, Math.max(5, Number(qrRefreshSeconds) || 15) * 1000);
+    // Initial fetch when live
+    fetchQrData(selectedLecture.id);
 
-    // Visual countdown interval
+    // Combined countdown and refresh logic
     const countdownTimer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 1 ? prev - 1 : qrRefreshSeconds));
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          // Trigger backend refresh as requested
+          fetchQrData(selectedLecture.id);
+          return qrRefreshSeconds;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => {
-      clearInterval(refreshTimer);
       clearInterval(countdownTimer);
     };
-  }, [qrRefreshSeconds, selectedLecture]);
+  }, [qrRefreshSeconds, selectedLecture, fetchQrData]);
 
   // Sync timeLeft if settings change
   useEffect(() => {
@@ -1052,7 +1076,7 @@ function CoursesTable({
               qrRefreshSeconds={qrRefreshSeconds}
               setQrRefreshSeconds={setQrRefreshSeconds}
               timeLeft={timeLeft}
-              qrImageUrl={qrImageUrl}
+              displayQrUrl={displayQrUrl}
               actionState={actionState}
               students={students}
               onStartSession={handleStartSession}
