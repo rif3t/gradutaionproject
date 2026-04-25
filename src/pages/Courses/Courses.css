@@ -1,8 +1,8 @@
 .courses-page-wrap {
   margin-top: 90px;
-  margin-left: calc(var(--sidebar-width) + 8px);
-  padding: 18px 20px 24px;
-  min-height: calc(100vh - 90px);
+  /* margin-left: calc(var(--sidebar-width) + 8px); */
+  /* padding: 18px 20px 24px; */
+  /* min-height: calc(100vh - 90px); */
   width: 100%;
 }
 

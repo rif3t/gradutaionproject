@@ -69,23 +69,23 @@ function App() {
           }
         />
 
-        <Route
+        {/* <Route
           path="/reports"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <ReportsPage />
             </ProtectedRoute>
           }
-        />
+        /> */}
 
-        <Route
+        {/* <Route
           path="/Setting"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <Setting />
             </ProtectedRoute>
           }
-        />
+        /> */}
       </Route>
       <Route element={<DoctorsLayout />}>
         <Route

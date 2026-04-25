@@ -27,8 +27,8 @@ function Sidebar({ isOpen, onClose }) {
     { label: "Students", icon: faGraduationCap, to: "/students" },
     { label: "Courses", icon: faBookOpen, to: "/courses" },
     { label: "Enrollment", icon: faClipboardCheck, to: "/enrollment" },
-    { label: "Reports", icon: faChartLine, to: "/reports" },
-    { label: "Settings", icon: faGear, to: "/Setting" },
+    // { label: "Reports", icon: faChartLine, to: "/reports" },
+    // { label: "Settings", icon: faGear, to: "/Setting" },
   ];
 
   return (

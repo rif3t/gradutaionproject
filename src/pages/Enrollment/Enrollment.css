@@ -1,6 +1,6 @@
 .enrollment-page-wrap {
   margin-top: 90px;
-  margin-left: calc(var(--sidebar-width) + 8px);
+  /* margin-left: calc(var(--sidebar-width) + 8px); */
   min-height: calc(100vh - 90px);
   width: 100%;
   padding: 20px 22px 28px;
