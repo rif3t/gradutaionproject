@@ -4,22 +4,29 @@ import LoginPage from "./pages/Login/Login";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import InstructorsPage from "./pages/Instructors/Instructors";
 import MainLayout from "./layouts/MainLayout/MainLayout";
-import Setting from "./pages/setting/Setting";
+// import Setting from "./pages/setting/Setting";
 import StudentsPage from "./pages/Students/Students";
 import CoursesPage from "./pages/Courses/Courses";
 import EnrollmentPage from "./pages/Enrollment/Enrollment";
-import ReportsPage from "./pages/Reports/Reports";
+// import ReportsPage from "./pages/Reports/Reports";
 import InstructorDashboard from "./pages/InstructorDashboard/InstructorDashboard";
 import InstructorCoursesPage from "./pages/InstructorDashboard/InstructorCoursesPage";
-import InstructorQrSessionPage from "./pages/InstructorDashboard/InstructorQrSessionPage";
+// import InstructorQrSessionPage from "./pages/InstructorDashboard/InstructorQrSessionPage";
 import InstructorAttendanceRecordsPage from "./pages/InstructorDashboard/InstructorAttendanceRecordsPage";
 import DoctorsLayout from "./layouts/doctor'slayout";
+import { Helmet } from 'react-helmet-async';
 import { ProtectedRoute } from "./routes/roleBasedRoutes";
+import logoimg from "../src/assets/images/logo.png"
 
 const Unauthorized = () => <Navigate to="/" replace />;
 
 function App() {
   return (
+  <>
+   <Helmet>
+        <title>FCAI Attendance System</title>
+        <meta property="" content={logoimg} />
+      </Helmet>
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
@@ -117,6 +124,7 @@ function App() {
       </Route>
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
+    </>
   );
 }
 

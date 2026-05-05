@@ -1,3 +1,5 @@
+// Dashboard.jsx
+import { useState, useEffect } from "react";
 import Card from "react-bootstrap/Card";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
@@ -22,38 +24,42 @@ import {
   faQrcode,
   faGear,
 } from "@fortawesome/free-solid-svg-icons";
+import { adminService } from "../../services/dashboard";
 
 function Dashboard() {
-  const stats = [
+  const [stats, setStats] = useState([
     {
       title: "Total Instructors",
-      value: "42",
-      delta: "+8% this month",
+      value: "—",
+      delta: "Loading...",
       icon: faChalkboardUser,
       tone: "blue",
     },
     {
       title: "Total Students",
-      value: "1,284",
-      delta: "+12% this month",
+      value: "—",
+      delta: "Loading...",
       icon: faUserGraduate,
       tone: "green",
     },
     {
       title: "Active Courses",
-      value: "36",
-      delta: "Across 4 levels",
+      value: "—",
+      delta: "Loading...",
       icon: faBookOpen,
       tone: "orange",
     },
     {
       title: "QR Sessions Today",
-      value: "118",
-      delta: "94% validated",
+      value: "—",
+      delta: "Loading...",
       icon: faQrcode,
       tone: "navy",
     },
-  ];
+  ]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const features = [
     {
@@ -80,18 +86,6 @@ function Dashboard() {
       desc: "Fine tune token refresh intervals and expiry windows.",
       color: "#8762d6",
     },
-    {
-      icon: faLocationDot,
-      title: "Geo Validation",
-      desc: "Enable GPS protection with custom attendance radius.",
-      color: "#d05c5c",
-    },
-    {
-      icon: faFileAlt,
-      title: "Smart Reports",
-      desc: "Get department and attendance insights instantly.",
-      color: "#56708f",
-    },
   ];
 
   const quickActions = [
@@ -117,9 +111,149 @@ function Dashboard() {
     },
   ];
 
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await adminService.getDashboardStats();
+      console.log("Full response:", response);
+
+      // التعامل مع هيكل الـ response (حسب ما يرجعه الـ API بتاعك)
+      let data = response;
+      
+      // لو الـ response جوا data property
+      if (response.data && typeof response.data === "object") {
+        data = response.data;
+      }
+      
+      // لو الـ response جوا success و data
+      if (response.success && response.data) {
+        data = response.data;
+      }
+
+      console.log("Extracted data:", data);
+
+      // تحديث الـ stats بناءً على الـ API response
+      const updatedStats = [
+        {
+          title: "Total Instructors",
+          value: data.totalInstructors?.toString() || data.instructorsCount?.toString() || "0",
+          icon: faChalkboardUser,
+          tone: "blue",
+        },
+        {
+          title: "Total Students",
+          value: data.totalStudents?.toString() || data.studentsCount?.toString() || "0",
+          icon: faUserGraduate,
+          tone: "green",
+        },
+        {
+          title: "Active Courses",
+          value: data.activeCourses?.toString() || data.coursesCount?.toString() || "0",
+          icon: faBookOpen,
+          tone: "orange",
+        },
+        {
+          title: "QR Sessions Today",
+          value: data.qrSessionsToday?.toString() || data.todayQRSessions?.toString() || "0",
+          icon: faQrcode,
+          tone: "navy",
+        },
+      ];
+
+      setStats(updatedStats);
+    } catch (err) {
+      console.error("Failed to fetch dashboard stats:", err);
+      setError(err.message || "Failed to load dashboard statistics. Please refresh the page.");
+      
+      // في حالة الخطأ، نستخدم بيانات تجريبية للـ development
+      if (process.env.NODE_ENV === "development") {
+        console.log("Using fallback mock data");
+        const mockStats = [
+          {
+            title: "Total Instructors",
+            value: "42",
+            delta: "+8% this month",
+            icon: faChalkboardUser,
+            tone: "blue",
+          },
+          {
+            title: "Total Students",
+            value: "1,284",
+            delta: "+12% this month",
+            icon: faUserGraduate,
+            tone: "green",
+          },
+          {
+            title: "Active Courses",
+            value: "36",
+            delta: "Across 4 levels",
+            icon: faBookOpen,
+            tone: "orange",
+          },
+          {
+            title: "QR Sessions Today",
+            value: "118",
+            delta: "94% validated",
+            icon: faQrcode,
+            tone: "navy",
+          },
+        ];
+        setStats(mockStats);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Retry function
+  const handleRetry = () => {
+    fetchDashboardStats();
+  };
+
+  if (loading) {
+    return (
+      <div className="dashcontent admin-dashboard">
+        <Container fluid>
+          <div className="text-center py-5">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p className="mt-3">Loading dashboard data...</p>
+          </div>
+        </Container>
+      </div>
+    );
+  }
+
   return (
     <div className="dashcontent admin-dashboard">
       <Container fluid>
+        {error && (
+          <div className="alert alert-warning alert-dismissible fade show mb-4" role="alert">
+            <strong>⚠️ Warning:</strong> {error}
+            <button
+              type="button"
+              className="btn-close"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+              onClick={() => setError(null)}
+            ></button>
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-primary ms-3"
+              onClick={handleRetry}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         <section className="dash-hero">
           <div>
             <p className="dash-kicker">Attendance Control Center</p>
@@ -230,8 +364,7 @@ function Dashboard() {
                       icon={faCheckCircle}
                       className="guide-footer-icon"
                     />
-                    Full control over QR timing, location validation, and
-                    department-level analytics.
+                    Full control over QR timing and department-level analytics.
                   </p>
                 </div>
               </Card.Body>

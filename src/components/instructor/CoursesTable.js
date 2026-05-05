@@ -1,9 +1,12 @@
+// ==================== CoursesTable.jsx - الكود كامل ====================
+
 import { useEffect, useMemo, useState, useCallback } from "react";
 import Badge from "react-bootstrap/Badge";
 import Alert from "react-bootstrap/Alert";
 import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
+import Spinner from "react-bootstrap/Spinner";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlay,
@@ -16,7 +19,6 @@ import {
   faUsers,
   faBookOpen,
   faLayerGroup,
-  faCircle,
   faChevronRight,
   faChevronLeft,
   faSearch,
@@ -25,7 +27,6 @@ import {
   faArrowRight,
   faGraduationCap,
   faBolt,
-  faEye,
   faStopCircle,
 } from "@fortawesome/free-solid-svg-icons";
 import DataStateView from "./shared/DataStateView";
@@ -95,7 +96,6 @@ function CoursesGrid({
 }) {
   return (
     <div className="ic-panel" id="ic-courses-panel">
-      {/* Header */}
       <div className="ic-panel-header">
         <div className="ic-panel-title-group">
           <div className="ic-panel-icon">
@@ -108,7 +108,6 @@ function CoursesGrid({
         </div>
       </div>
 
-      {/* Toolbar */}
       <div className="ic-toolbar">
         <div className="ic-search-wrap">
           <FontAwesomeIcon icon={faSearch} className="ic-search-icon" />
@@ -156,7 +155,6 @@ function CoursesGrid({
         </select>
       </div>
 
-      {/* Grid */}
       <DataStateView
         loading={coursesState.loading}
         error={coursesState.error}
@@ -178,20 +176,16 @@ function CoursesGrid({
                 }}
                 id={`course-card-${course.id}`}
               >
-                {/* Card glow accent */}
                 <div className="ic-card-glow" />
-
                 <div className="ic-course-card-top">
                   <div className="ic-course-avatar">
                     {(course.name || "C").charAt(0).toUpperCase()}
                   </div>
                   <StatusBadge status={course.status} />
                 </div>
-
                 <div className="ic-course-card-body">
                   <h3 className="ic-course-name">{course.name}</h3>
                   <p className="ic-course-code">{course.code || "—"}</p>
-
                   <div className="ic-course-meta">
                     <span className="ic-meta-chip">
                       <FontAwesomeIcon icon={faLayerGroup} />
@@ -203,7 +197,6 @@ function CoursesGrid({
                     </span>
                   </div>
                 </div>
-
                 <div className="ic-course-card-footer">
                   <AttendancePie rate={course.attendanceRate} />
                   <button
@@ -225,7 +218,6 @@ function CoursesGrid({
             );
           })}
         </div>
-
         <DataPagination meta={coursesMeta} onPageChange={onPageChange} />
       </DataStateView>
 
@@ -420,7 +412,6 @@ function LecturesPanel({
 }) {
   return (
     <div className="ic-panel" id="ic-lectures-panel">
-      {/* Header */}
       <div className="ic-panel-header">
         <div className="ic-panel-title-group">
           <button className="ic-back-btn" onClick={onBack} id="back-to-courses-btn">
@@ -446,7 +437,6 @@ function LecturesPanel({
         </button>
       </div>
 
-      {/* Toolbar */}
       <div className="ic-toolbar ic-lectures-toolbar">
         <div className="ic-search-wrap">
           <FontAwesomeIcon icon={faSearch} className="ic-search-icon" />
@@ -475,12 +465,11 @@ function LecturesPanel({
         </select>
       </div>
 
-      {/* List */}
       <DataStateView
         loading={courseDetailsState.loading}
         error={courseDetailsState.error}
         isEmpty={filteredLectures.length === 0}
-        emptyMessage="No lectures yet. Click '+ Add Lecture' to create your first one."
+        emptyMessage=" No lectures yet. Click '+ Add Lecture' to create your first one."
       >
         <div className="ic-lectures-list" id="ic-lectures-list">
           {filteredLectures.map((lecture) => (
@@ -495,7 +484,6 @@ function LecturesPanel({
         </div>
       </DataStateView>
 
-      {/* Lecture form modal */}
       {lectureForm.open && (
         <LectureFormModal
           form={lectureForm}
@@ -509,7 +497,7 @@ function LecturesPanel({
   );
 }
 
-// ─── STEP 3: Session & QR Panel ───────────────────────────────────────────────
+// ─── STEP 3: Session & QR Panel (WITH ALL STUDENTS LIST) ─────────────────────────────────
 
 function SessionQrPanel({
   lecture,
@@ -527,12 +515,140 @@ function SessionQrPanel({
   onEndSession,
   onEditLecture,
   onBack,
+  qrDetails,
 }) {
   const isLive = lecture?.status === "live";
+  const [directQrPayload, setDirectQrPayload] = useState(null);
+  const [qrKey, setQrKey] = useState(0);
+  const [isLoadingQr, setIsLoadingQr] = useState(false);
+  const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
+  
+  // Present counter states
+  const [presentCount, setPresentCount] = useState(0);
+  const [totalStudentsCount, setTotalStudentsCount] = useState(0);
 
+  // Fetch QR directly from API with present count
+  const fetchDirectQr = async () => {
+  if (!lecture?.id) return;
+  setIsLoadingQr(true);
+  setHasAttemptedFetch(true);
+  try {
+    console.log("🔄 Fetching QR directly for lecture:", lecture.id);
+    // ✅ FIX: Pass the qrRefreshSeconds here!
+    const data = await instructorDashboardApi.getQrCodeData(lecture.id, qrRefreshSeconds);
+      let payload = null;
+      if (data?.code?.value) {
+        payload = data.code.value;
+      } else if (data?.qrPayload) {
+        payload = data.qrPayload;
+      } else if (data?.payload) {
+        payload = data.payload;
+      }
+      
+      if (payload) {
+        console.log("✅ Direct QR payload:", payload.substring(0, 50));
+        setDirectQrPayload(payload);
+        setQrKey(prev => prev + 1);
+      }
+      
+      // Update present count from API response
+      if (data?.presentCount !== undefined) {
+        setPresentCount(data.presentCount);
+        console.log(`📊 Present count updated: ${data.presentCount}`);
+      }
+      
+      // Try to get total students count
+      if (data?.totalStudents !== undefined) {
+        setTotalStudentsCount(data.totalStudents);
+      } else if (lecture?.id) {
+        try {
+          const sessionData = await instructorDashboardApi.getAttendanceSession(lecture.id);
+          if (sessionData?.totalStudents) {
+            setTotalStudentsCount(sessionData.totalStudents);
+          }
+        } catch (err) {
+          console.warn("Could not fetch total students:", err);
+        }
+      }
+      
+    } catch (err) {
+      console.error("❌ Direct QR fetch failed:", err);
+    } finally {
+      setIsLoadingQr(false);
+    }
+  };
+
+  // Fetch QR immediately when lecture exists (first time)
+  useEffect(() => {
+    if (lecture?.id && !hasAttemptedFetch) {
+      fetchDirectQr();
+    }
+  }, [lecture?.id]);
+
+  // Fetch QR immediately when session becomes live
+  useEffect(() => {
+    if (lecture?.status === "live") {
+      fetchDirectQr();
+    }
+  }, [lecture?.status]);
+
+  // Periodic refresh only if session is live
+  useEffect(() => {
+    if (!lecture?.id || lecture?.status !== "live") return;
+    
+    const interval = setInterval(() => {
+      fetchDirectQr();
+    }, (qrRefreshSeconds || 30) * 1000);
+    
+    return () => clearInterval(interval);
+  }, [lecture?.id, lecture?.status, qrRefreshSeconds]);
+
+  // Use direct payload only - NO FALLBACK to prevent fake QR
+  const finalPayload = directQrPayload;
+  
+  // Build QR URL only if we have real payload
+  const finalQrUrl = finalPayload
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(finalPayload)}&bgcolor=ffffff&color=1a1a2e&qzone=2&_t=${Date.now()}&_key=${qrKey}`
+    : null;
+
+  // Calculate attendance percentage
+  const attendancePercentage = totalStudentsCount > 0 
+    ? Math.round((presentCount / totalStudentsCount) * 100) 
+    : 0;
+
+  // Get students array safely
+  const studentsList = students || [];
+// في SessionQrPanel - أضف بعد useState
+
+useEffect(() => {
+  const fetchAndPrintSessionData = async () => {
+    if (!lecture?.id) return;
+    
+    try {
+      console.log("🔄 جاري جلب بيانات الجلسة من الـ API...");
+      const sessionData = await instructorDashboardApi.getAttendanceSession(lecture.id);
+      
+      console.log("📋 ===== بيانات الجلسة كاملة =====");
+      console.log(JSON.stringify(sessionData, null, 2));
+      console.log("📋 =============================");
+      
+      // طباعة الحقول المهمة بشكل منفصل
+      console.log("🔑 QR Payload:", sessionData?.qrPayload);
+      console.log("⏱️ Expires At:", sessionData?.expiresAt);
+      console.log("⏱️ QR Refresh Interval:", sessionData?.qrRefreshInSeconds || sessionData?.qrRefreshIntervalSeconds);
+      console.log("📊 Session Status:", sessionData?.sessionStatus);
+      console.log("👨‍🎓 Present Count:", sessionData?.presentCount);
+      
+      return sessionData;
+    } catch (error) {
+      console.error("❌ خطأ في جلب بيانات الجلسة:", error);
+    }
+  };
+  
+  fetchAndPrintSessionData();
+}, [lecture?.id]);
   return (
     <div className="ic-panel" id="ic-session-panel">
-      {/* Header */}
       <div className="ic-panel-header">
         <div className="ic-panel-title-group">
           <button className="ic-back-btn" onClick={onBack} id="back-to-lectures-btn">
@@ -571,11 +687,28 @@ function SessionQrPanel({
         <div className="ic-qr-zone">
           <div className={`ic-qr-card${isLive ? " live" : ""}`} id="qr-code-display">
             <div className="ic-qr-inner">
-              <img
-                src={displayQrUrl}
-                alt="Attendance QR Code"
-                className={`ic-qr-img${isLive ? " pulse" : " dimmed"}`}
-              />
+              {isLoadingQr && !directQrPayload ? (
+                <div className="text-center p-4">
+                  <FontAwesomeIcon icon={faRotateRight} spin size="2x" />
+                  <p className="mt-2">Loading QR from backend...</p>
+                </div>
+              ) : finalQrUrl ? (
+                <img
+                  key={qrKey}
+                  src={finalQrUrl}
+                  alt="Attendance QR Code"
+                  className={`ic-qr-img${isLive ? " pulse" : " dimmed"}`}
+                  onError={(e) => {
+                    console.error("❌ QR image failed to load");
+                  }}
+                  onLoad={() => console.log("✅ QR image loaded with payload:", finalPayload?.substring(0, 40))}
+                />
+              ) : (
+                <div className="text-center p-4">
+                  <FontAwesomeIcon icon={faQrcode} size="3x" className="text-muted" />
+                  <p className="mt-2">Click Start Session to generate QR code...</p>
+                </div>
+              )}
               {!isLive && (
                 <div className="ic-qr-overlay">
                   <FontAwesomeIcon icon={faBolt} />
@@ -596,14 +729,73 @@ function SessionQrPanel({
           {isLive && (
             <div className="ic-qr-refresh-note">
               <FontAwesomeIcon icon={faRotateRight} className="spin-slow" />
-              QR refreshes in {timeLeft}s
+              QR refreshes every {timeLeft || qrRefreshSeconds} seconds
             </div>
           )}
+          
+          <div className="text-center mt-2 small">
+            {directQrPayload ? (
+              <span className="text-success">✓ Real QR Token Active</span>
+            ) : isLoadingQr ? (
+              <span className="text-warning">⏳ Loading QR from backend...</span>
+            ) : (
+              <span className="text-muted">⏳ Waiting for session to start...</span>
+            )}
+          </div>
         </div>
 
-        {/* RIGHT: Controls */}
+        {/* RIGHT: Session Controls */}
         <div className="ic-session-controls">
-          {/* Session settings */}
+          
+          {/* ATTENDANCE COUNTER CARD */}
+          <div className="ic-control-card" id="attendance-counter-card">
+            <h4 className="ic-control-card-title">
+              <FontAwesomeIcon icon={faUsers} /> Students in Class
+            </h4>
+            
+            <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
+              <div style={{ 
+                fontSize: '2.5rem', 
+                fontWeight: 'bold', 
+                color: '#1e9c50',
+                fontFamily: 'monospace'
+              }}>
+                {presentCount}
+              </div>
+              <div style={{ color: '#888', fontSize: '0.8rem' }}>
+                Students Present
+              </div>
+              
+              {totalStudentsCount > 0 && (
+                <>
+                  <div style={{ marginTop: '0.25rem', fontSize: '0.75rem', color: '#666' }}>
+                    out of {totalStudentsCount} total students
+                  </div>
+                  <div style={{ 
+                    marginTop: '0.5rem',
+                    width: '100%',
+                    height: '4px',
+                    background: '#2a2a3e',
+                    borderRadius: '2px',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      width: `${attendancePercentage}%`,
+                      height: '100%',
+                      background: 'linear-gradient(90deg, #1e9c50, #2ecc71)',
+                      borderRadius: '2px',
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+                  <div style={{ marginTop: '0.25rem', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                    {attendancePercentage}% Attendance
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Session Settings Card */}
           <div className="ic-control-card" id="session-settings-card">
             <h4 className="ic-control-card-title">Session Settings</h4>
             <div className="ic-settings-grid">
@@ -643,7 +835,7 @@ function SessionQrPanel({
             </div>
           </div>
 
-          {/* Session actions */}
+          {/* Session Control Card */}
           <div className="ic-control-card" id="session-actions-card">
             <h4 className="ic-control-card-title">Session Control</h4>
             <div className="ic-session-action-btn-group">
@@ -651,14 +843,10 @@ function SessionQrPanel({
                 <button
                   className="ic-start-btn"
                   onClick={() => onStartSession(lecture?.id)}
-                  disabled={
-                    !lecture?.id ||
-                    actionState.busy === `course-${lecture?.courseId}-create-session`
-                  }
+                  disabled={!lecture?.id || actionState.busy === `course-${lecture?.courseId}-create-session`}
                   id="start-session-btn"
                 >
-                  <FontAwesomeIcon icon={faPlay} />
-                  Start Session
+                  <FontAwesomeIcon icon={faPlay} /> Start Session
                 </button>
               )}
               
@@ -666,14 +854,10 @@ function SessionQrPanel({
                 <button
                   className="ic-reopen-btn"
                   onClick={() => onReopenSession(lecture?.id)}
-                  disabled={
-                    !lecture?.id ||
-                    actionState.busy === `course-${lecture?.courseId}-reopen-session`
-                  }
+                  disabled={!lecture?.id || actionState.busy === `course-${lecture?.courseId}-reopen-session`}
                   id="reopen-session-btn"
                 >
-                  <FontAwesomeIcon icon={faRotateRight} />
-                  Reopen Session
+                  <FontAwesomeIcon icon={faRotateRight} /> Reopen Session
                 </button>
               )}
 
@@ -681,14 +865,10 @@ function SessionQrPanel({
                 <button
                   className="ic-end-btn"
                   onClick={() => onEndSession(lecture?.id)}
-                  disabled={
-                    !lecture?.id ||
-                    actionState.busy === `course-${lecture?.courseId}-end-session`
-                  }
+                  disabled={!lecture?.id || actionState.busy === `course-${lecture?.courseId}-end-session`}
                   id="end-session-btn"
                 >
-                  <FontAwesomeIcon icon={faStopCircle} />
-                  End Session
+                  <FontAwesomeIcon icon={faStopCircle} /> End Session
                 </button>
               )}
               
@@ -697,78 +877,69 @@ function SessionQrPanel({
                 onClick={() => onEditLecture(lecture)}
                 id="edit-lecture-details-btn"
               >
-                <FontAwesomeIcon icon={faPen} />
-                Edit Lecture
+                <FontAwesomeIcon icon={faPen} /> Edit Lecture
               </button>
             </div>
           </div>
 
-          {/* Session info */}
+          {/* Session Info Card */}
           <div className="ic-control-card" id="session-info-card">
             <h4 className="ic-control-card-title">Session Info</h4>
             <ul className="ic-info-list">
-              <li>
-                <span className="ic-info-key">Status</span>
-                <StatusBadge status={lecture?.status} />
-              </li>
-              <li>
-                <span className="ic-info-key">Lecture ID</span>
-                <span className="ic-info-val">{lecture?.id}</span>
-              </li>
-              <li>
-                <span className="ic-info-key">Duration</span>
-                <span className="ic-info-val">{sessionDuration} min</span>
-              </li>
-              <li>
-                <span className="ic-info-key">QR Cycle</span>
-                <span className="ic-info-val">{qrRefreshSeconds}s</span>
-              </li>
-              {lecture?.location && (
-                <li>
-                  <span className="ic-info-key">Location</span>
-                  <span className="ic-info-val">{lecture.location}</span>
-                </li>
-              )}
+              <li><span className="ic-info-key">Status</span><StatusBadge status={lecture?.status} /></li>
+              <li><span className="ic-info-key">Lecture ID</span><span className="ic-info-val">{lecture?.id}</span></li>
+              <li><span className="ic-info-key">Duration</span><span className="ic-info-val">{sessionDuration} min</span></li>
+              <li><span className="ic-info-key">QR Cycle</span><span className="ic-info-val">{qrRefreshSeconds}s</span></li>
+              {lecture?.location && <li><span className="ic-info-key">Location</span><span className="ic-info-val">{lecture.location}</span></li>}
             </ul>
           </div>
 
-          {/* Students preview */}
-          {(students || []).length > 0 && (
+          {/* STUDENTS LIST CARD - NOW SHOWING ALL STUDENTS with scroll */}
+          {studentsList.length > 0 && (
             <div className="ic-control-card" id="students-preview-card">
               <h4 className="ic-control-card-title">
-                <FontAwesomeIcon icon={faUsers} /> Students Preview
+                <FontAwesomeIcon icon={faUsers} /> Students List
+                <Badge bg="secondary" className="ms-2">{studentsList.length} Total</Badge>
               </h4>
-              <ul className="ic-students-list">
-                {(students || []).slice(0, 6).map((s) => (
-                  <li key={s.id} className="ic-student-row">
-                    <div className="ic-student-avatar">
-                      {(s.fullName || "?").charAt(0)}
-                    </div>
-                    <span className="ic-student-name">{s.fullName}</span>
-                    <span
-                      className={`ic-student-status ${
-                        s.status === "Present"
-                          ? "present"
-                          : s.status === "Late"
-                          ? "late"
-                          : "absent"
-                      }`}
-                    >
-                      {s.status}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              
+              {/* Scrollable students list */}
+              <div style={{ 
+                maxHeight: '400px', 
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                marginTop: '12px'
+              }}>
+                <ul className="ic-students-list" style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                  {studentsList.map((s, index) => (
+                    <li key={s.id || index} className="ic-student-row">
+                      <div className="ic-student-avatar">
+                        {(s.fullName || s.name || "?").charAt(0).toUpperCase()}
+                      </div>
+                      <span className="ic-student-name">
+                        {s.fullName || s.name || s.studentName || "Unknown"}
+                      </span>
+                      <span className={`ic-student-status ${s.status === "Present" ? "present" : s.status === "Late" ? "late" : "absent"}`}>
+                        {s.status || "Absent"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              
+              {/* Show total count indicator if many students */}
+              {studentsList.length > 10 && (
+                <div className="text-center mt-2 pt-1 small text-muted">
+                  <FontAwesomeIcon icon={faUsers} className="me-1" />
+                  Showing all {studentsList.length} students
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
 
       {(actionState.error || actionState.success) && (
-        <Alert
-          className="ic-feedback-alert mt-3 mb-0"
-          variant={actionState.error ? "danger" : "success"}
-        >
+        <Alert className="ic-feedback-alert mt-3 mb-0" variant={actionState.error ? "danger" : "success"}>
           {actionState.error || actionState.success}
         </Alert>
       )}
@@ -786,11 +957,7 @@ function FlowBreadcrumb({ step, courseName, lectureName }) {
         Courses
       </span>
       <FontAwesomeIcon icon={faArrowRight} className="ic-bc-sep" />
-      <span
-        className={`ic-bc-step${
-          step === 2 ? " active" : step > 2 ? " done" : ""
-        }`}
-      >
+      <span className={`ic-bc-step${step === 2 ? " active" : step > 2 ? " done" : ""}`}>
         <span className="ic-bc-num">{step > 2 ? <FontAwesomeIcon icon={faCheckCircle} /> : "2"}</span>
         {step > 1 ? courseName || "Lectures" : "Lectures"}
       </span>
@@ -822,13 +989,13 @@ function CoursesTable({
   onSessionFilter,
   onCourseAction,
   onLectureAction,
+  qrDetails,
 }) {
-  // Navigation step: 1 = courses, 2 = lectures, 3 = session/QR
   const [step, setStep] = useState(1);
   const [selectedLectureId, setSelectedLectureId] = useState("");
   const [sessionDuration, setSessionDuration] = useState(60);
-  const [qrRefreshSeconds, setQrRefreshSeconds] = useState(15);
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [qrRefreshSeconds, setQrRefreshSeconds] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(30);
   const [qrImageUrl, setQrImageUrl] = useState("");
   const [lectureSearch, setLectureSearch] = useState("");
   const [lectureFilter, setLectureFilter] = useState("");
@@ -842,7 +1009,6 @@ function CoursesTable({
     location: "",
   });
 
-  // Derived
   const selectedCourse = useMemo(
     () => (courses || []).find((c) => c.id === selectedCourseId),
     [courses, selectedCourseId],
@@ -870,62 +1036,56 @@ function CoursesTable({
     [filteredLectures, selectedLectureId],
   );
 
-  const fetchQrData = useCallback(async (lectureId) => {
-    if (!lectureId) return;
-    try {
-      const data = await instructorDashboardApi.getQrCodeData(lectureId);
-      if (data?.qrUrl) {
-        setQrImageUrl(data.qrUrl);
-      }
-    } catch (error) {
-      console.error("QR Refresh failed:", error);
+  const fetchQrData = useCallback(async (lectureId, refreshInterval) => {
+  if (!lectureId) return;
+  try {
+    // ✅ Pass it to the API
+    const data = await instructorDashboardApi.getQrCodeData(lectureId, refreshInterval);
+    if (data?.qrUrl) {
+      setQrImageUrl(data.qrUrl);
     }
-  }, []);
+  } catch (error) {
+    console.error("QR Refresh failed:", error);
+  }
+}, []);
 
   const qrPayload = selectedLecture?.id || selectedCourseId || "SESSION";
-  // The primary qrImageUrl now comes from state, but we fall back to a local one if empty
   const displayQrUrl = qrImageUrl || buildQrUrl(qrPayload);
 
-  // Auto-select first lecture
   useEffect(() => {
     if (!selectedLectureId && filteredLectures[0]) {
       setSelectedLectureId(filteredLectures[0].id);
     }
   }, [filteredLectures, selectedLectureId]);
 
-  // QR auto-refresh when live + Countdown logic
   useEffect(() => {
-    if (!selectedLecture || selectedLecture.status !== "live") {
-      setTimeLeft(qrRefreshSeconds);
-      return;
-    }
+  if (!selectedLecture || selectedLecture.status !== "live") {
+    setTimeLeft(qrRefreshSeconds);
+    return;
+  }
 
-    // Initial fetch when live
-    fetchQrData(selectedLecture.id);
+  // ✅ Pass qrRefreshSeconds here
+  fetchQrData(selectedLecture.id, qrRefreshSeconds);
 
-    // Combined countdown and refresh logic
-    const countdownTimer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          // Trigger backend refresh as requested
-          fetchQrData(selectedLecture.id);
-          return qrRefreshSeconds;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+  const countdownTimer = setInterval(() => {
+    setTimeLeft((prev) => {
+      if (prev <= 1) {
+        // ✅ Pass qrRefreshSeconds here too
+        fetchQrData(selectedLecture.id, qrRefreshSeconds);
+        return qrRefreshSeconds;
+      }
+      return prev - 1;
+    });
+  }, 1000);
 
-    return () => {
-      clearInterval(countdownTimer);
-    };
-  }, [qrRefreshSeconds, selectedLecture, fetchQrData]);
-
-  // Sync timeLeft if settings change
+  return () => {
+    clearInterval(countdownTimer);
+  };
+}, [qrRefreshSeconds, selectedLecture, fetchQrData]);
   useEffect(() => {
     setTimeLeft(qrRefreshSeconds);
   }, [qrRefreshSeconds]);
 
-  // Reset step when course changes
   useEffect(() => {
     if (selectedCourseId) {
       setStep(2);
@@ -933,20 +1093,30 @@ function CoursesTable({
     }
   }, [selectedCourseId]);
 
-  // Handlers
-  const handleStartSession = (lectureId) => {
-    onCourseAction("create-session", selectedCourseId, {
-      lectureId,
-      durationInMinutes: sessionDuration,
-    });
+  // ⭐ MODIFIED: Added qrRefreshIntervalSeconds to payload
+ const handleStartSession = (lectureId) => {
+  const payload = {
+    lectureId,
+    durationInMinutes: sessionDuration,
+    refreshInSeconds: qrRefreshSeconds,  // ✅ مهم جداً - القيمة 10 هتبعت صح
   };
+  
+  console.log("🔵 handleStartSession - Sending payload:", payload);
+  
+  onCourseAction("create-session", selectedCourseId, payload);
+};
 
-  const handleReopenSession = (lectureId) => {
-    onCourseAction("reopen-session", selectedCourseId, {
-      lectureId,
-      durationInMinutes: sessionDuration,
-    });
+const handleReopenSession = (lectureId) => {
+  const payload = {
+    lectureId,
+    durationInMinutes: sessionDuration,
+    refreshInSeconds: qrRefreshSeconds,  // ✅ مهم جداً - القيمة 10 هتبعت صح
   };
+  
+  console.log("🔵 handleReopenSession - Sending payload:", payload);
+  
+  onCourseAction("reopen-session", selectedCourseId, payload);
+};
 
   const handleEndSession = (lectureId) => {
     onCourseAction("end-session", selectedCourseId, {
@@ -984,7 +1154,6 @@ function CoursesTable({
         courseId: selectedCourseId,
       });
       
-      // Only close if successful
       if (result) {
         resetLectureForm();
       }
@@ -1009,14 +1178,13 @@ function CoursesTable({
           className="mx-3 mt-3 mb-0 ic-feedback-alert"
           variant={actionState.error ? "danger" : "success"}
           dismissible
-          onClose={() => {}} // Usually clearActionFeedback is needed but I can just rely on the next action clearing it
+          onClose={() => {}}
         >
           {actionState.error || actionState.success}
         </Alert>
       )}
 
       <div className="ic-step-container">
-        {/* STEP 1 — Courses */}
         <div className={`ic-step-pane${step === 1 ? " visible" : ""}`} aria-hidden={step !== 1}>
           {step === 1 && (
             <CoursesGrid
@@ -1039,7 +1207,6 @@ function CoursesTable({
           )}
         </div>
 
-        {/* STEP 2 — Lectures */}
         <div className={`ic-step-pane${step === 2 ? " visible" : ""}`} aria-hidden={step !== 2}>
           {step === 2 && (
             <LecturesPanel
@@ -1065,7 +1232,6 @@ function CoursesTable({
           )}
         </div>
 
-        {/* STEP 3 — Session + QR */}
         <div className={`ic-step-pane${step === 3 ? " visible" : ""}`} aria-hidden={step !== 3}>
           {step === 3 && selectedLecture && (
             <SessionQrPanel
@@ -1084,6 +1250,7 @@ function CoursesTable({
               onEndSession={handleEndSession}
               onEditLecture={openEditLectureForm}
               onBack={() => setStep(2)}
+              qrDetails={qrDetails}
             />
           )}
           {step === 3 && !selectedLecture && (
@@ -1097,7 +1264,6 @@ function CoursesTable({
               </div>
             </div>
           )}
-          {/* Lecture edit modal available from step 3 */}
           {lectureForm.open && (
             <LectureFormModal
               form={lectureForm}

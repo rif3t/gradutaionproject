@@ -8,6 +8,13 @@ import {
 import { instructorDashboardApi } from "../services/instructorDashboardApi";
 import { getApiErrorMessage } from "../services/apiClient";
 
+// ========== HELPER FUNCTIONS ==========
+const buildQrImageUrl = (payload) => {
+  const encoded = encodeURIComponent(payload || "FCAI-ATTENDANCE");
+  return `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encoded}`;
+};
+// ========== END HELPER FUNCTIONS ==========
+
 const InstructorWorkspaceContext = createContext(null);
 
 const defaultPaging = {
@@ -302,18 +309,15 @@ export function InstructorWorkspaceProvider({ children }) {
           "Lecture created successfully."
         );
       } else if (action === "update") {
-        // We use courseId for now as the swagger doesn't have a specific updateLecture but we can try updateCourse or simulate
          await runAction(
           actionKey,
           async () => {
-             // If backend adds update, wire it here
              return { success: true };
           },
           "Lecture info updated."
         );
       }
 
-      // Refresh data
       await loadCourseDetails(courseId);
     },
     [loadCourseDetails, runAction, selectedCourseId],
@@ -371,7 +375,6 @@ export function InstructorWorkspaceProvider({ children }) {
         return;
       }
 
-      // 1. Block starting a new session if another is already live (Only one active session allowed)
       if (["create-session", "quick-start", "start", "reopen-session", "reopen"].includes(action)) {
         const { sessions: allLive } = await instructorDashboardApi.getLiveOverview();
         const active = (allLive || []).find(s => s.status === "live");
@@ -474,6 +477,7 @@ export function InstructorWorkspaceProvider({ children }) {
     [qrQuery, runTask, selectedQrSessionId],
   );
 
+  // ========== MODIFIED loadQrDetails ==========
   const loadQrDetails = useCallback(
     async (qrSessionId) => {
       const targetId = qrSessionId || selectedQrSessionId;
@@ -481,49 +485,89 @@ export function InstructorWorkspaceProvider({ children }) {
         return;
       }
 
+      console.log("🔍 loadQrDetails called for session:", targetId);
       setSelectedQrSessionId(targetId);
-      const result = await runTask(setQrState, () =>
-        instructorDashboardApi.getQrCodeData(targetId),
-      );
-      if (result) {
-        setQrDetails(result);
+      setQrState(prev => ({ ...prev, loading: true, error: "" }));
+
+      try {
+        const result = await instructorDashboardApi.getQrCodeData(targetId);
+        console.log("📦 API result in loadQrDetails:", result);
+        
+        let qrPayloadValue = null;
+        
+        if (result?.code?.value) {
+          qrPayloadValue = result.code.value;
+        } else if (result?.qrPayload) {
+          qrPayloadValue = result.qrPayload;
+        } else if (result?.payload) {
+          qrPayloadValue = result.payload;
+        } else if (result?.qrUrl) {
+          const match = result.qrUrl.match(/data=([^&]+)/);
+          if (match) {
+            qrPayloadValue = decodeURIComponent(match[1]);
+          }
+        }
+        
+        console.log("✅ Extracted QR payload:", qrPayloadValue?.substring(0, 50));
+        
+        if (qrPayloadValue) {
+          setQrDetails({
+            code: {
+              value: qrPayloadValue,
+              status: result?.sessionStatus || result?.code?.status || "active",
+              expiresAt: result?.qrExpiresAt || result?.code?.expiresAt || new Date(Date.now() + 5 * 60 * 1000).toISOString()
+            },
+            image: result?.image || { url: buildQrImageUrl(qrPayloadValue) },
+            scans: result?.scans || [],
+            liveScans: result?.liveScans || [],
+            sessionStatus: result?.sessionStatus || "active",
+            qrExpiresAt: result?.qrExpiresAt
+          });
+          console.log("✅ qrDetails state updated successfully with payload");
+        } else {
+          console.warn("⚠️ No QR payload found in response");
+        }
+        setQrState(prev => ({ ...prev, loading: false, error: "" }));
+      } catch (error) {
+        console.error("❌ Error loading QR details:", error);
+        setQrState(prev => ({ ...prev, loading: false, error: error.message }));
       }
     },
-    [runTask, selectedQrSessionId],
+    [selectedQrSessionId]
   );
+  // ========== END MODIFIED loadQrDetails ==========
 
+  // ========== EXECUTE QR ACTION ==========
   const executeQrAction = useCallback(
     async (qrSessionId, action) => {
       const targetId = qrSessionId || selectedQrSessionId;
-      if (!targetId) {
-        return;
+      if (!targetId) return;
+
+      console.log(`🎯 executeQrAction: ${action} for session ${targetId}`);
+      setActionState({ busy: action, error: "", success: "" });
+
+      try {
+        const result = await instructorDashboardApi.qrAction(targetId, action);
+        console.log(`✅ ${action} result:`, result);
+        setActionState({
+          busy: "",
+          error: "",
+          success: `QR ${action === "generate" ? "generated" : action} successfully.`,
+        });
+        await loadQrSessions();
+        await loadQrDetails(targetId);
+      } catch (error) {
+        console.error(`❌ Action ${action} failed:`, error);
+        setActionState({
+          busy: "",
+          error: getApiErrorMessage(error, "Action failed."),
+          success: "",
+        });
       }
-
-      // Check for active sessions globally
-      if (action === "regenerate") {
-        const { sessions: allLive } = await instructorDashboardApi.getLiveOverview();
-        const active = (allLive || []).find(s => s.status === "live");
-
-        if (active && String(active.id) !== String(targetId)) {
-          setActionState({
-            busy: "",
-            error: `Action Blocked: Another session is already live ("${active.title}"). Please end it before starting a new one.`,
-            success: "",
-          });
-          return;
-        }
-      }
-
-      await runAction(
-        `qr-${targetId}-${action}`,
-        () => instructorDashboardApi.qrAction(targetId, action),
-        `QR action ${action} applied.`,
-      );
-      await loadQrSessions();
-      await loadQrDetails(targetId);
     },
-    [loadQrDetails, loadQrSessions, runAction, selectedQrSessionId],
+    [loadQrDetails, loadQrSessions, selectedQrSessionId]
   );
+  // ========== END EXECUTE QR ACTION ==========
 
   const loadLiveMonitor = useCallback(
     async (selectedSessionId = "") => {
@@ -736,7 +780,6 @@ export function InstructorWorkspaceProvider({ children }) {
         return;
       }
 
-      // Check for active sessions globally
       if (["start", "reopen"].includes(action)) {
         const { sessions: allLive } = await instructorDashboardApi.getLiveOverview();
         const active = (allLive || []).find(s => s.status === "live");
@@ -771,7 +814,6 @@ export function InstructorWorkspaceProvider({ children }) {
       dashboardState,
       loadDashboard,
       setTrendRange,
-
       coursesQuery,
       coursesData,
       coursesState,
@@ -783,7 +825,7 @@ export function InstructorWorkspaceProvider({ children }) {
       loadCourses,
       loadCourseDetails,
       runCourseAction,
-
+      handleLectureAction,
       qrQuery,
       qrData,
       qrState,
@@ -793,13 +835,11 @@ export function InstructorWorkspaceProvider({ children }) {
       loadQrSessions,
       loadQrDetails,
       executeQrAction,
-
       liveData,
       liveState,
       loadLiveMonitor,
       setLiveSession,
       runLiveAction,
-
       attendanceQuery,
       attendanceData,
       attendanceSummary,
@@ -808,17 +848,14 @@ export function InstructorWorkspaceProvider({ children }) {
       attendanceBulkAction,
       reviewAttendance,
       exportAttendance,
-
       sessionControlQuery,
       sessionControlData,
       sessionControlState,
       loadSessionControl,
       setSessionControlSelection,
       runSessionAction,
-
       actionState,
       clearActionFeedback,
-      handleLectureAction,
     }),
     [
       actionState,

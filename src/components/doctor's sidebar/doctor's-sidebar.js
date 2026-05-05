@@ -34,15 +34,12 @@ function Sidebar2({ isOpen, onClose }) {
   return (
     <aside className={`sidebar-shell ${isOpen ? "mobile-open" : ""}`}>
       <div className="sidebar-brand">
-        <div className="sidebar-brand-content">
-          <h1>FCAI</h1>
-          <img
-            src={logoImage}
-            alt="FCAI University Logo"
-            className="sidebar-university-logo"
-          />
-        </div>
-        {/* Mobile Close Button */}
+        <img
+          src={logoImage}
+          alt="FCAI University Logo"
+          className="sidebar-university-logo"
+        />
+        <h1>FCAI</h1>
         <button className="sidebar-mobile-close" onClick={onClose}>
           &times;
         </button>

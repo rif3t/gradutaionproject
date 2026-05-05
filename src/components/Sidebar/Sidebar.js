@@ -27,21 +27,17 @@ function Sidebar({ isOpen, onClose }) {
     { label: "Students", icon: faGraduationCap, to: "/students" },
     { label: "Courses", icon: faBookOpen, to: "/courses" },
     { label: "Enrollment", icon: faClipboardCheck, to: "/enrollment" },
-    // { label: "Reports", icon: faChartLine, to: "/reports" },
-    // { label: "Settings", icon: faGear, to: "/Setting" },
   ];
 
   return (
     <aside className={`sidebar-shell ${isOpen ? "mobile-open" : ""}`}>
       <div className="sidebar-brand">
-        <div className="sidebar-brand-content">
-          <h1>FCAI</h1>
-          <img
-            src={logoImage}
-            alt="FCAI University Logo"
-            className="sidebar-university-logo"
-          />
-        </div>
+        <img
+          src={logoImage}
+          alt="FCAI University Logo"
+          className="sidebar-university-logo"
+        />
+        <h1>FCAI</h1>
         <button className="sidebar-mobile-close" onClick={onClose}>
           &times;
         </button>

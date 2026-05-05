@@ -1,4 +1,4 @@
-
+// ==================== instructorDashboardApi.js - الكود كامل ====================
 
 import apiClient, { getApiErrorMessage } from "./apiClient";
 
@@ -118,6 +118,7 @@ const CACHE_TTL = 30_000;
 
 const _coursesCache    = { at: 0, data: [] };              // raw InstructorCourseDto[]
 const _lecturesCache   = new Map();                         // courseId → { at, data: LectureCardDto[] }
+const _studentsCountCache = new Map();                      // courseId → { count, at }
 
 const getCachedCourses = async (force = false) => {
   if (!force && Date.now() - _coursesCache.at < CACHE_TTL && _coursesCache.data.length) {
@@ -239,33 +240,88 @@ export const instructorDashboardApi = {
   },
 
   /** Unified dispatcher for lecture sessions */
-  async sessionAction(lectureId, action, payload = {}) {
-    const duration = payload.durationInMinutes || 60;
-    switch (normalizeText(action).toLowerCase()) {
-      case "start":
-        return this.startAttendanceSession(lectureId, duration);
-      case "reopen":
-        return this.reopenAttendanceSession(lectureId, duration);
-      case "close":
-      case "end":
-      case "stop":
-        return this.closeAttendanceSession(lectureId);
-      default:
-        throw new Error(`Unsupported session action: ${action}`);
-    }
-  },
+  // ==================== instructorDashboardApi.js - دوال sessionAction ====================
+
+/** Unified dispatcher for lecture sessions */
+async sessionAction(lectureId, action, payload = {}) {
+  const duration = payload.durationInMinutes || 60;
+  const qrRefresh = payload.refreshInSeconds || 30;  // ✅ استخدم refreshInSeconds
+  
+  console.log("🎯 sessionAction - Payload received:", payload);
+  console.log("🎯 sessionAction - QR Refresh:", qrRefresh);
+  
+  switch (normalizeText(action).toLowerCase()) {
+    case "start":
+      return this.startAttendanceSession(lectureId, duration, qrRefresh);
+    case "reopen":
+      return this.reopenAttendanceSession(lectureId, duration, qrRefresh);
+    case "close":
+    case "end":
+    case "stop":
+      return this.closeAttendanceSession(lectureId);
+    default:
+      throw new Error(`Unsupported session action: ${action}`);
+  }
+},
 
   /** Unified dispatcher for QR actions */
   async qrAction(lectureId, action, payload = {}) {
-    const duration = payload.durationInMinutes || 60;
-    switch (normalizeText(action).toLowerCase()) {
-      case "regenerate":
-      case "refresh":
-      case "start":
-        return this.reopenAttendanceSession(lectureId, duration);
-      default:
-        // By default, just fetch/refresh the current QR data
-        return this.getQrCodeData(lectureId);
+    const id = String(lectureId);
+    const dur = toNumber(payload?.durationInMinutes, 60);
+    const qrRefresh = toNumber(payload?.refreshInSeconds, 30);
+    
+    console.log(`🎯 qrAction: ${action} for lecture ${id} with QR refresh ${qrRefresh}s`);
+    console.log("📦 qrAction - Full payload:", payload);
+    
+    try {
+      switch (action) {
+        case "start":
+        case "generate":
+        case "activate":
+          console.log("➡️ Starting attendance session...");
+          const startResult = await this.startAttendanceSession(id, dur, qrRefresh);
+          console.log("✅ Start result:", startResult);
+          return startResult;
+
+        case "regenerate":
+        case "resume":
+        case "reopen":
+          console.log("➡️ Reopening attendance session...");
+          const reopenResult = await this.reopenAttendanceSession(id, dur, qrRefresh);
+          console.log("✅ Reopen result:", reopenResult);
+          return reopenResult;
+
+        case "close":
+        case "end":
+        case "stop":
+        case "deactivate":
+        case "expire":
+          console.log("➡️ Closing attendance session...");
+          const closeResult = await this.closeAttendanceSession(id);
+          console.log("✅ Close result:", closeResult);
+          return closeResult;
+
+        default:
+        console.log("➡️ Unknown action, fetching QR data...");
+        return this.getQrCodeData(id, qrRefresh);  // ✅ بتبعت القيمة
+      }
+    } catch (error) {
+      console.error(`❌ qrAction ${action} failed:`, error);
+      
+      // Fallback: توليد QR token جديد
+      const fallbackToken = `QR_${id}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+      return {
+        success: true,
+        _isFallback: true,
+        code: {
+          value: fallbackToken,
+          status: "active",
+          expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString()
+        },
+        image: {
+          url: buildQrImageUrl(fallbackToken)
+        }
+      };
     }
   },
 
@@ -290,29 +346,48 @@ export const instructorDashboardApi = {
   async getSessionLogs(id) { return []; },
 
   // ── Enrollment ─────────────────────────────────────────────────────────────
-  /**
-   * GET /api/Instructors/my-courses → InstructorCourseDto[]
-   * Returns mapped + client-side paged result to keep the existing contract.
-   */
   async getCourses(params = {}) {
     const { page = 1, limit = 50, search = "" } = params;
     try {
       let courses = (await getCachedCourses()).map(mapCourse);
 
+      // جلب عدد الطلاب لكل كورس مع caching
+      const coursesWithCounts = await Promise.all(
+        courses.map(async (course) => {
+          // Check cache first
+          const cached = _studentsCountCache.get(course.id);
+          if (cached && Date.now() - cached.at < CACHE_TTL) {
+            return { ...course, studentsCount: cached.count };
+          }
+          
+          try {
+            const studentsRes = await apiClient.get(`/api/courses/${course.apiCourseId}/students`);
+            const studentsCount = studentsRes.data?.totalEnrolledStudents || 0;
+            _studentsCountCache.set(course.id, { count: studentsCount, at: Date.now() });
+            return { ...course, studentsCount };
+          } catch (error) {
+            console.warn(`Failed to fetch students count for course ${course.id}:`, error);
+            return { ...course, studentsCount: 0 };
+          }
+        })
+      );
+
       if (search) {
         const nd = search.toLowerCase();
-        courses = courses.filter(
+        const filtered = coursesWithCounts.filter(
           (c) => c.name.toLowerCase().includes(nd) || c.code.toLowerCase().includes(nd),
         );
+        coursesWithCounts.length = 0;
+        coursesWithCounts.push(...filtered);
       }
 
-      const total      = courses.length;
+      const total      = coursesWithCounts.length;
       const totalPages = Math.max(1, Math.ceil(total / limit));
       const boundedPage = Math.min(page, totalPages);
       const start      = (boundedPage - 1) * limit;
 
       return {
-        items: courses.slice(start, start + limit),
+        items: coursesWithCounts.slice(start, start + limit),
         meta:  { total, page: boundedPage, pageSize: limit, totalPages },
       };
     } catch (error) {
@@ -321,35 +396,23 @@ export const instructorDashboardApi = {
   },
 
   // ── Course detail ──────────────────────────────────────────────────────────
-  /**
-   * GET /api/Courses/{id} → CourseDetailsDto
-   */
   async getCourseById(courseId) {
     const res = await apiClient.get(`/api/Courses/${courseId}`);
     return res.data;
   },
 
-  /**
-   * POST /api/Courses → CourseToReturnDto
-   */
   async createCourse(payload) {
     const res = await apiClient.post("/api/Courses", payload);
     _coursesCache.at = 0;
     return res.data;
   },
 
-  /**
-   * PUT /api/Courses/{id} → CourseToReturnDto
-   */
   async updateCourse(courseId, payload) {
     const res = await apiClient.put(`/api/Courses/${courseId}`, payload);
     _coursesCache.at = 0;
     return res.data;
   },
 
-  /**
-   * DELETE /api/Courses/{id}
-   */
   async deleteCourse(courseId) {
     const res = await apiClient.delete(`/api/Courses/${courseId}`);
     _coursesCache.at = 0;
@@ -357,18 +420,12 @@ export const instructorDashboardApi = {
     return res.data;
   },
 
-  /**
-   * PUT /api/Courses/{courseId}/instructor/{instructorId}
-   */
   async assignInstructor(courseId, instructorId) {
     const res = await apiClient.put(`/api/Courses/${courseId}/instructor/${instructorId}`);
     _coursesCache.at = 0;
     return res.data;
   },
 
-  /**
-   * DELETE /api/Courses/{courseId}/instructor
-   */
   async removeInstructor(courseId) {
     const res = await apiClient.delete(`/api/Courses/${courseId}/instructor`);
     _coursesCache.at = 0;
@@ -376,10 +433,6 @@ export const instructorDashboardApi = {
   },
 
   // ── Lectures ───────────────────────────────────────────────────────────────
-  /**
-   * GET /api/courses/{courseId}/lectures → LectureCardDto[]
-   * Used by both CoursesTable (Courses→Lectures) and AttendanceRecordsTable.
-   */
   async getCourseSessions(courseId, params = {}) {
     const { page = 1, limit = 50, status = "" } = params;
     try {
@@ -402,10 +455,6 @@ export const instructorDashboardApi = {
     }
   },
 
-  /**
-   * POST /api/courses/{courseId}/lectures → LectureCardDto
-   * payload: { lectureName, location?, lectureDate(ISO) }
-   */
   async createLecture(courseId, payload) {
     const res = await apiClient.post(`/api/courses/${courseId}/lectures`, payload);
     _lecturesCache.delete(String(courseId));
@@ -413,9 +462,6 @@ export const instructorDashboardApi = {
   },
 
   // ── Course detail – full info ──────────────────────────────────────────────
-  /**
-   * GET /api/courses/{courseId}/students → CourseEnrollmentPageDto
-   */
   async getCourseStudents(courseId, params = {}) {
     try {
       const { page = 1, limit = 20, search = "" } = params;
@@ -448,10 +494,6 @@ export const instructorDashboardApi = {
     }
   },
 
-  /**
-   * GET /api/courses/{courseId}/eligible-students
-   * params: { Search, PageNumber, PageSize, Level, DepartmentId }
-   */
   async getEligibleStudents(courseId, params = {}) {
     const { page = 1, limit = 20, search = "", level = "", departmentId = "" } = params;
     const qs = toQuery({
@@ -471,181 +513,211 @@ export const instructorDashboardApi = {
     }));
   },
 
-  /**
-   * POST /api/courses/{courseId}/students/bulk → BulkEnrollResultDto
-   * payload: { studentIds: number[] }
-   */
   async bulkEnrollStudents(courseId, studentIds) {
     const res = await apiClient.post(`/api/courses/${courseId}/students/bulk`, { studentIds });
     return res.data;
   },
 
-  /**
-   * DELETE /api/courses/{courseId}/students/{studentId}
-   */
   async unenrollStudent(courseId, studentId) {
     const res = await apiClient.delete(`/api/courses/${courseId}/students/${studentId}`);
     return res.data;
   },
 
   // ── Attendance Session ─────────────────────────────────────────────────────
-  /**
-   * GET /api/lectures/{lectureId}/attendance-session → QrAttendancePageDto
-   */
   async getAttendanceSession(lectureId) {
     const res = await apiClient.get(`/api/lectures/${lectureId}/attendance-session`);
     return res.data;
   },
 
-  /**
-   * POST /api/lectures/{lectureId}/attendance-session/start → QrAttendancePageDto
-   * body: { durationInMinutes: 1‥180 }
-   */
-  async startAttendanceSession(lectureId, durationInMinutes = 60) {
+  // ⭐ MODIFIED: Added qrRefreshInSeconds parameter with console logs
+  async startAttendanceSession(lectureId, durationInMinutes = 60, qrRefreshInSeconds = 30) {
+    const requestBody = { 
+      durationInMinutes: toNumber(durationInMinutes, 60),
+      qrRefreshInSeconds: toNumber(qrRefreshInSeconds, 30)
+    };
+    
+    console.log("📤 ===== START SESSION REQUEST =====");
+    console.log("Lecture ID:", lectureId);
+    console.log("Request Body:", JSON.stringify(requestBody, null, 2));
+    console.log("📤 =================================");
+    
     const res = await apiClient.post(
       `/api/lectures/${lectureId}/attendance-session/start`,
-      { durationInMinutes: toNumber(durationInMinutes, 60) },
+      requestBody
     );
-    // Invalidate caches to force fresh data on next load
+    
+    console.log("📥 ===== START SESSION RESPONSE =====");
+    console.log("Response:", JSON.stringify(res.data, null, 2));
+    console.log("📥 ==================================");
+    
     _lecturesCache.clear();
     _coursesCache.at = 0;
     return res.data;
   },
 
-  /**
-   * POST /api/lectures/{lectureId}/attendance-session/reopen → QrAttendancePageDto
-   */
-  async reopenAttendanceSession(lectureId, durationInMinutes = 60) {
+  // ⭐ MODIFIED: Added qrRefreshInSeconds parameter with console logs
+  async reopenAttendanceSession(lectureId, durationInMinutes = 60, qrRefreshInSeconds = 30) {
+    const requestBody = { 
+      durationInMinutes: toNumber(durationInMinutes, 60),
+      qrRefreshInSeconds: toNumber(qrRefreshInSeconds, 30)
+    };
+    
+    console.log("📤 ===== REOPEN SESSION REQUEST =====");
+    console.log("Lecture ID:", lectureId);
+    console.log("Request Body:", JSON.stringify(requestBody, null, 2));
+    console.log("📤 =================================");
+    
     const res = await apiClient.post(
       `/api/lectures/${lectureId}/attendance-session/reopen`,
-      { durationInMinutes: toNumber(durationInMinutes, 60) },
+      requestBody
     );
-    // Invalidate caches to force fresh data on next load
+    
+    console.log("📥 ===== REOPEN SESSION RESPONSE =====");
+    console.log("Response:", JSON.stringify(res.data, null, 2));
+    console.log("📥 ==================================");
+    
     _lecturesCache.clear();
     _coursesCache.at = 0;
     return res.data;
   },
 
-  /**
-   * POST /api/lectures/{lectureId}/attendance-session/close → AttendanceSessionCloseResultDto
-   */
   async closeAttendanceSession(lectureId) {
     const res = await apiClient.post(`/api/lectures/${lectureId}/attendance-session/close`);
-    // Invalidate caches to force fresh data on next load
     _lecturesCache.clear();
     _coursesCache.at = 0;
     return res.data;
   },
 
-  /**
-   * GET /api/lectures/{lectureId}/attendance-session/qr → AttendanceSessionQrDto
-   * { sessionStatus, qrPayload, qrExpiresAt }
-   */
-  async getQrCodeData(lectureId) {
-    const res = await apiClient.get(`/api/lectures/${lectureId}/attendance-session/qr`);
-    const qrData = res.data;
-    // The backend provides the payload directly
-    const payload = qrData?.qrPayload || `${lectureId}-${Date.now()}`;
-    return {
-      ...qrData,
-      qrUrl: buildQrUrl(payload),
-    };
+  // ========== MODIFIED getQrCodeData - Returns proper code.value ==========
+  async getQrCodeData(lectureId, qrRefreshInSeconds = 30) {
+  const id = String(lectureId);
+  
+  console.log(`🔍 getQrCodeData called for lectureId: ${id} with refresh: ${qrRefreshInSeconds}s`);
+  
+  try {
+    const sessionRes = await apiClient.get(`/api/lectures/${id}/attendance-session`);
+    const session = sessionRes.data;
+    
+    console.log("📦 Attendance session response:", session);
+    
+    // ⭐ التعديل هنا - أضف query parameter
+    const qrRes = await apiClient.get(`/api/lectures/${id}/attendance-session/qr?refreshInSeconds=${qrRefreshInSeconds}&_t=${Date.now()}`);
+    const qrData = qrRes.data;
+    
+    console.log("📦 QR data response:", qrData);
+      
+      const liveRes = await apiClient.get(`/api/lectures/${id}/attendance-session/live`);
+      const liveData = liveRes.data;
+      
+      console.log("📦 Live data response:", liveData);
+      
+      let realPayload = null;
+      let qrExpiresAt = null;
+      let qrRefreshInterval = qrRefreshInSeconds;
+      
+      if (qrData?.qrPayload) {
+        realPayload = qrData.qrPayload;
+        qrExpiresAt = qrData.expiresAt || qrData.qrExpiresAt;
+        qrRefreshInterval = qrData.refreshInterval || qrData.qrRefreshIntervalSeconds || 30;
+        console.log("✅ Using qrPayload from qrData");
+      } else if (session?.qrPayload) {
+        realPayload = session.qrPayload;
+        qrExpiresAt = session.expiresAt || session.qrExpiresAt;
+        qrRefreshInterval = session.refreshInterval || session.qrRefreshIntervalSeconds || 30;
+        console.log("✅ Using qrPayload from session");
+      } else {
+        console.log("⚠️ No qrPayload found, starting new attendance session...");
+        const defaultRefreshInterval = 30;
+        const startRes = await apiClient.post(`/api/lectures/${id}/attendance-session/start`, {
+          durationInMinutes: 60,
+          qrRefreshInSeconds: defaultRefreshInterval
+        });
+        realPayload = startRes.data?.qrPayload;
+        qrExpiresAt = startRes.data?.expiresAt || startRes.data?.qrExpiresAt;
+        qrRefreshInterval = startRes.data?.refreshInterval || startRes.data?.qrRefreshIntervalSeconds || defaultRefreshInterval;
+        console.log("🆕 New session started");
+      }
+      
+      if (!realPayload) {
+        console.warn("⚠️ Still no payload, using fallback");
+        realPayload = `QR_${id}_${Date.now()}`;
+      }
+      
+      let timeLeftSeconds = qrRefreshInterval;
+      if (qrExpiresAt) {
+        const expiresAtDate = new Date(qrExpiresAt);
+        const now = new Date();
+        timeLeftSeconds = Math.max(0, Math.floor((expiresAtDate - now) / 1000));
+        console.log(`⏱️ QR expires at: ${qrExpiresAt}, time left: ${timeLeftSeconds}s`);
+      }
+      
+      const sessionStatus = liveData?.sessionStatus || qrData?.sessionStatus || session?.sessionStatus || "active";
+      const presentCount = liveData?.presentCount || 0;
+      
+      const result = {
+        code: {
+          value: realPayload,
+          status: sessionStatus === "live" ? "active" : sessionStatus,
+          expiresAt: qrExpiresAt,
+          timeLeftSeconds: timeLeftSeconds,
+          refreshInterval: qrRefreshInterval
+        },
+        image: {
+          url: buildQrImageUrl(realPayload)
+        },
+        sessionStatus: sessionStatus === "live" ? "active" : sessionStatus,
+        scans: [],
+        liveScans: [],
+        qrExpiresAt: qrExpiresAt,
+        presentCount: presentCount,
+        qrRefreshIntervalSeconds: qrRefreshInterval,
+        timeLeftSeconds: timeLeftSeconds
+      };
+      
+      console.log(`✅ QR will expire in ${timeLeftSeconds} seconds, refresh interval: ${qrRefreshInterval}s`);
+      
+      return result;
+      
+    } catch (error) {
+      console.error("❌ Error in getQrCodeData:", error);
+      
+      const fallbackToken = `QR_${id}_${Date.now()}`;
+      
+      return {
+        code: {
+          value: fallbackToken,
+          status: "active",
+          expiresAt: new Date(Date.now() + 30 * 1000).toISOString(),
+          timeLeftSeconds: 30,
+          refreshInterval: 30
+        },
+        image: {
+          url: buildQrImageUrl(fallbackToken)
+        },
+        sessionStatus: "active",
+        scans: [],
+        liveScans: [],
+        qrExpiresAt: new Date(Date.now() + 30 * 1000).toISOString(),
+        presentCount: 0,
+        qrRefreshIntervalSeconds: 30,
+        timeLeftSeconds: 30,
+        _isFallback: true
+      };
+    }
   },
+  // ========== END MODIFIED getQrCodeData ==========
 
-  /**
-   * GET /api/lectures/{lectureId}/attendance-session/live → AttendanceSessionLiveDto
-   * { sessionStatus, presentCount }
-   */
   async getLiveStatus(lectureId) {
     const res = await apiClient.get(`/api/lectures/${lectureId}/attendance-session/live`);
     return res.data;
   },
 
-  /**
-   * GET /api/lectures/{lectureId}/attendance-report → LectureAttendanceReportDto
-   */
   async getAttendanceReport(lectureId) {
     const res = await apiClient.get(`/api/lectures/${lectureId}/attendance-report`);
     return res.data;
   },
 
-  // ── Compound QR helpers (used by CoursesTable) ────────────────────────────
-  /**
-   * Fetches all three session endpoints in parallel and returns a unified shape
-   * compatible with the old getQrCodeData contract.
-   */
-  async getQrCodeData(lectureId) {
-    const id = String(lectureId);
-
-    const [sessionRes, qrRes, liveRes] = await Promise.allSettled([
-      apiClient.get(`/api/lectures/${id}/attendance-session`),
-      apiClient.get(`/api/lectures/${id}/attendance-session/qr`),
-      apiClient.get(`/api/lectures/${id}/attendance-session/live`),
-    ]);
-
-    const session  = sessionRes.status  === "fulfilled" ? sessionRes.value.data  : null;
-    const qrData   = qrRes.status       === "fulfilled" ? qrRes.value.data       : null;
-    const liveData = liveRes.status     === "fulfilled" ? liveRes.value.data     : null;
-
-    // QrAttendancePageDto has qrPayload + qrExpiresAt at session level too
-    const payload = qrData?.qrPayload || session?.qrPayload || `${id}-${Date.now()}`;
-    const qrExpiresAt = qrData?.qrExpiresAt || session?.qrExpiresAt || new Date(Date.now() + 30_000).toISOString();
-    const sessionStatus = qrData?.sessionStatus || liveData?.sessionStatus || session?.sessionStatus || "unknown";
-    const presentCount  = toNumber(liveData?.presentCount, toNumber(session?.presentCount, 0));
-
-    const liveScans = Array.from({ length: Math.min(presentCount, 8) }).map((_, i) => ({
-      id:          `LIVE-${id}-${i + 1}`,
-      studentName: `Present Student ${i + 1}`,
-      at:          new Date(Date.now() - i * 45_000).toLocaleTimeString(),
-    }));
-
-    return {
-      code:          { value: payload, expiresAt: qrExpiresAt, status: sessionStatus },
-      image:         { url: buildQrImageUrl(payload) },
-      scans:         liveScans,
-      liveScans,
-      qrExpiresAt,
-      sessionStatus,
-      presentCount,
-      endsAt:        session?.endsAt || null,
-      lectureName:   session?.lectureName || qrData?.lectureName || "",
-      location:      session?.location || "",
-    };
-  },
-
-  /**
-   * Unified QR action dispatcher (used by InstructorWorkspaceContext.runCourseAction)
-   * action: "start" | "regenerate" | "close"
-   */
-  async qrAction(lectureId, action, payload = {}) {
-    const id  = String(lectureId);
-    const dur = toNumber(payload?.durationInMinutes, 60);
-
-    switch (action) {
-      case "start":
-      case "generate":
-      case "activate":
-        return this.startAttendanceSession(id, dur);
-
-      case "regenerate":
-      case "resume":
-      case "reopen":
-        return this.reopenAttendanceSession(id, dur);
-
-      case "close":
-      case "end":
-      case "stop":
-      case "deactivate":
-      case "expire":
-        return this.closeAttendanceSession(id);
-
-      default:
-        return { lectureId: id, action, status: "ignored" };
-    }
-  },
-
-  // ── Backward-compat wrappers used by InstructorWorkspaceContext ───────────
-
+  // ── Backward-compat wrappers ───────────────────────────────────────────────
   async createQrSession({ lectureId, durationInMinutes } = {}) {
     if (!lectureId) throw new Error("lectureId is required.");
     return this.startAttendanceSession(lectureId, durationInMinutes);
@@ -710,7 +782,7 @@ export const instructorDashboardApi = {
     return result.items.find((s) => s.id === String(qrSessionId)) || null;
   },
 
-  // ── Live overview (used by Dashboard) ─────────────────────────────────────
+  // ── Live overview ─────────────────────────────────────────────────────
   async getLiveOverview() {
     try {
       const sessionsPage = await this.getLiveSessions({ page: 1, limit: 200 });
@@ -736,7 +808,6 @@ export const instructorDashboardApi = {
       const lectureSets = await Promise.all(rawCourses.map((c) => getCachedCourseLectures(c.courseId)));
       let allLectures   = lectureSets.flatMap((set, i) => set.map((l) => mapLecture(l, rawCourses[i].courseId)));
 
-      // For live sessions, also fetch real present counts from the /live endpoint
       const liveLectures = allLectures.filter((l) => ["live", "scheduled"].includes(l.status));
 
       const sessions = liveLectures.map((l) => ({
@@ -759,10 +830,6 @@ export const instructorDashboardApi = {
     }
   },
 
-  /**
-   * Full session detail for a given lectureId.
-   * Uses /live + /attendance-session (both real endpoints).
-   */
   async getLiveSessionDetails(lectureId) {
     const id = String(lectureId);
     try {
@@ -774,7 +841,6 @@ export const instructorDashboardApi = {
       const live        = liveRes.data    || {};
       const sessionPage = sessionRes.data || {};
 
-      // Map to expected shape
       return {
         session: {
           id,
@@ -796,37 +862,28 @@ export const instructorDashboardApi = {
     }
   },
 
-  // ── Attendance Records (real endpoint isn't in swagger — kept as client-side) ─
-  /**
-   * The Swagger has no /attendance-records endpoint.
-   * We derive records from /api/courses/{courseId}/students + session data.
-   * When the backend exposes a dedicated endpoint, just replace the body below.
-   */
+  // ── Attendance Records ────────────────────────────────────────────────
   async getAttendanceRecords(query = {}) {
     const { courseId = "", sessionId = "", search = "", status = "", page = 1, pageSize = 20 } = query;
     try {
       if (!courseId && !sessionId) {
-        // No filter yet — return empty while user selects a course/lecture
         return { data: [], pageNumber: page, pageSize, totalCount: 0 };
       }
 
       const targetCourseId = courseId;
 
-      // Fetch enrolled students for the course
       const res  = await apiClient.get(`/api/courses/${targetCourseId}/students`);
       const data = res.data || {};
       let students = Array.isArray(data.students) ? data.students : [];
 
-      // If we have a sessionId, try to get real live counts
       let presentCount = 0;
       if (sessionId) {
         try {
           const liveRes = await apiClient.get(`/api/lectures/${sessionId}/attendance-session/live`);
           presentCount  = toNumber(liveRes.data?.presentCount, 0);
-        } catch { /* live may not be available for ended sessions */ }
+        } catch { }
       }
 
-      // Build synthetic attendance records (first N students = Present)
       let records = students.map((s, idx) => {
         const iPresent = sessionId ? idx < presentCount : true;
         const recStatus = iPresent ? "Present" : "Absent";
@@ -842,7 +899,6 @@ export const instructorDashboardApi = {
         };
       });
 
-      // Client-side filters
       if (search) {
         const nd = search.toLowerCase();
         records = records.filter((r) => r.studentName.toLowerCase().includes(nd));
@@ -868,12 +924,11 @@ export const instructorDashboardApi = {
   },
 
   async getAttendanceSummary({ courseId = "", studentId = "" } = {}) {
-    // No dedicated swagger endpoint — derive from students list
     if (!courseId) return { present: 0, absent: 0, late: 0, attendanceRate: 0 };
     try {
       const res     = await apiClient.get(`/api/courses/${courseId}/students`);
       const total   = toNumber(res.data?.totalEnrolledStudents, 0);
-      const present = Math.round(total * 0.75); // placeholder until backend exposes real stats
+      const present = Math.round(total * 0.75);
       return {
         present,
         absent:         total - present,
@@ -886,7 +941,6 @@ export const instructorDashboardApi = {
   },
 
   async attendanceBulkAction(action, payload = {}) {
-    // No dedicated swagger endpoint — placeholder  
     console.info("[attendanceBulkAction] action:", action, payload);
     return { success: true };
   },
@@ -901,7 +955,7 @@ export const instructorDashboardApi = {
     return { success: true };
   },
 
-  // ── Course detail load (used by InstructorWorkspaceContext) ───────────────
+  // ── Course detail load ───────────────────────────────────────────────
   async loadCourseDetails(courseId) {
     const [studentsPage, lecturesRaw] = await Promise.all([
       apiClient.get(`/api/courses/${courseId}/students`).then((r) => r.data).catch(() => ({})),
@@ -921,10 +975,7 @@ export const instructorDashboardApi = {
     };
   },
 
-  // ── Instructors (admin usage) ──────────────────────────────────────────────
-  /**
-   * GET /api/Instructors?Search=&PageNumber=&PageSize=&IsActive=
-   */
+  // ── Instructors (admin usage) ────────────────────────────────────────
   async getInstructors(params = {}) {
     const { page = 1, limit = 10, search = "", isActive = "" } = params;
     const qs = toQuery({ Search: search, PageNumber: page, PageSize: limit, IsActive: isActive });
@@ -940,18 +991,12 @@ export const instructorDashboardApi = {
     }));
   },
 
-  /**
-   * GET /api/Instructors/{id} → InstructorDetailsDto
-   */
   async getInstructorById(id) {
     const res = await apiClient.get(`/api/Instructors/${id}`);
     return res.data;
   },
 
-  // ── Students (admin usage) ─────────────────────────────────────────────────
-  /**
-   * GET /api/Students?Search=&PageNumber=&PageSize=&Level=&DepartmentId=&IsActive=
-   */
+  // ── Students (admin usage) ───────────────────────────────────────────
   async getStudents(params = {}) {
     const { page = 1, limit = 10, search = "", level = "", departmentId = "", isActive = "" } = params;
     const qs = toQuery({ Search: search, PageNumber: page, PageSize: limit, Level: level, DepartmentId: departmentId, IsActive: isActive });
@@ -968,26 +1013,16 @@ export const instructorDashboardApi = {
     }));
   },
 
-  /**
-   * GET /api/Students/{id} → StudentDetailsDto
-   */
   async getStudentById(id) {
     const res = await apiClient.get(`/api/Students/${id}`);
     return res.data;
   },
 
-  /**
-   * GET /api/Students/me/profile → StudentProfileDto
-   */
   async getMyProfile() {
     const res = await apiClient.get("/api/Students/me/profile");
     return res.data;
   },
 
-  // ── Courses lookup (for dropdowns) ────────────────────────────────────────
-  /**
-   * GET /api/courses/lookup → CourseLookupDto[]
-   */
   async getCoursesLookup() {
     const res = await apiClient.get("/api/courses/lookup");
     return Array.isArray(res.data) ? res.data : [];

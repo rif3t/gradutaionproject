@@ -383,10 +383,9 @@ function ARAttendanceStep({
       : <FontAwesomeIcon icon={faAngleDown} className="ar-sort-active" />;
   };
 
-  // summary stats
+  // summary stats (Late removed)
   const present  = summary?.present        || 0;
   const absent   = summary?.absent         || 0;
-  const late     = summary?.late           || 0;
   const rate     = summary?.attendanceRate || 0;
 
   return (
@@ -437,7 +436,7 @@ function ARAttendanceStep({
         </div>
       </div>
 
-      {/* ── Summary Cards ── */}
+      {/* ── Summary Cards (Late removed) ── */}
       <div className="ar-summary-row">
         <div className="ar-stat-card present">
           <div className="ar-stat-icon">
@@ -457,15 +456,6 @@ function ARAttendanceStep({
             <h3 className="ar-stat-val">{absent}</h3>
           </div>
         </div>
-        <div className="ar-stat-card late">
-          <div className="ar-stat-icon">
-            <FontAwesomeIcon icon={faUserClock} />
-          </div>
-          <div>
-            <p className="ar-stat-label">Late</p>
-            <h3 className="ar-stat-val">{late}</h3>
-          </div>
-        </div>
         <div className="ar-stat-card rate">
           <div className="ar-stat-icon">
             <FontAwesomeIcon icon={faCheckCircle} />
@@ -474,7 +464,6 @@ function ARAttendanceStep({
             <p className="ar-stat-label">Attendance Rate</p>
             <h3 className="ar-stat-val">{rate}%</h3>
           </div>
-          {/* mini bar */}
           <div className="ar-rate-bar-track">
             <div className="ar-rate-bar-fill" style={{ width: `${Math.min(100, rate)}%` }} />
           </div>
@@ -509,7 +498,6 @@ function ARAttendanceStep({
           <option value="">All Statuses</option>
           <option value="Present">Present</option>
           <option value="Absent">Absent</option>
-          <option value="Late">Late</option>
           <option value="Excused">Excused</option>
         </select>
         <input
@@ -781,15 +769,14 @@ function AttendanceRecordsTable({
               records={(reportData?.students || []).map((s, idx) => ({
                 id: `rep-${idx}`,
                 studentName: s.fullName,
-                studentId: s.departmentName || "N/A", // showing department as subtitle/id info
+                studentId: s.departmentName || "N/A",
                 status: s.attendanceStatus,
                 date: reportData.lectureDate,
-                time: "-", // Report might not have scan time
+                time: "-",
               }))}
               summary={{
                 present: reportData?.presentCount || 0,
                 absent: reportData?.absentCount || 0,
-                late: (reportData?.students || []).filter(s => (s.attendanceStatus || "").toLowerCase() === "late").length,
                 attendanceRate: reportData?.totalEligibleStudents 
                   ? Math.round((reportData.presentCount / reportData.totalEligibleStudents) * 100)
                   : 0
